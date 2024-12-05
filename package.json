@@ -1,0 +1,32 @@
+{
+  "name": "graduationproject",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Mohamed Abdalslam",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "config": "^3.3.12",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.6",
+    "express": "^4.21.1",
+    "express-async-errors": "^3.1.1",
+    "joi": "^17.13.3",
+    "joi-objectid": "^4.0.2",
+    "joi-password-complexity": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.0",
+    "netlify-cli": "^17.38.0",
+    "netlify-lambda": "^2.0.16",
+    "nodemailer": "^6.9.16",
+    "passport": "^0.7.0",
+    "passport-google-plus-token": "^2.1.0",
+    "serverless-http": "^3.2.0",
+    "winston": "^3.15.0"
+  }
+}
