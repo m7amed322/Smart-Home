@@ -2,7 +2,7 @@ require("express-async-errors");
 const express = require("express");
 const requests = require("../routes/requests");
 const admin = require("../routes/admins");
-const error = require("../controllers/middleware/error");
+const error = require("../middleware/error");
 const users = require("../routes/users");
 const cors  =require("cors");
 module.exports = function (app) {
