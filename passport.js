@@ -1,5 +1,5 @@
 const passport = require("passport");
-const { User } = require("./models/user");
+const { User } = require("/models/user");
 const googlePlusTokenStrategy = require("passport-google-plus-token");
 passport.use(
   "googleToken",
