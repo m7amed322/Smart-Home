@@ -1,5 +1,4 @@
 const express = require("express")
-// const serverless = require ("serverless-http");
 const winston = require("winston")
 const app = express()
 require("./startup/logging")();
@@ -12,4 +11,3 @@ const port = process.env.PORT || 1000
 app.listen(port,()=>{
     winston.info(`listening to port ${port}...`)
 })
-console.log("Environment Variables",process.env);

@@ -22,19 +22,14 @@
     "express": "^4.21.1",
     "express-async-errors": "^3.1.1",
     "helmet": "^8.0.0",
-    "heroku": "^8.7.1",
-    "heroku-cli": "^7.0.9",
     "joi": "^17.13.3",
     "joi-objectid": "^4.0.2",
     "joi-password-complexity": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
-    "netlify-cli": "^17.38.0",
-    "netlify-lambda": "^2.0.16",
     "nodemailer": "^6.9.16",
     "passport": "^0.7.0",
     "passport-google-plus-token": "^2.1.0",
-    "serverless-http": "^3.2.0",
     "winston": "^3.15.0"
   }
 }
