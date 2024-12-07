@@ -3,19 +3,27 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "engines":{
+    "node": "23.0.0"
   },
   "author": "Mohamed Abdalslam",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "compression": "^1.7.5",
     "config": "^3.3.12",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.6",
     "express": "^4.21.1",
     "express-async-errors": "^3.1.1",
+    "helmet": "^8.0.0",
+    "heroku": "^8.7.1",
+    "heroku-cli": "^7.0.9",
     "joi": "^17.13.3",
     "joi-objectid": "^4.0.2",
     "joi-password-complexity": "^5.2.0",
