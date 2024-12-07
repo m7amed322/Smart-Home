@@ -7,7 +7,7 @@ const users = require("../routes/users");
 const cors  =require("cors");
 module.exports = function (app) {
   app.use(cors())
-  app.use(cors({origin:"https://smartthomee.netlify.app"}))
+  // app.use(cors({origin:"https://smartthomee.netlify.app"}))
   app.use(express.json());
   app.use("/api/sendRequests", requests);
   app.use("/api/admin", admin);
