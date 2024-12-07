@@ -62,7 +62,8 @@ module.exports = {
     }
     const token = admin.genToken();
     res.header("x-auth-token", token);
-    res.json({ message: "logged in successfully" });
+    res.json({ admin:admin
+      ,message: "logged in successfully" });
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();
