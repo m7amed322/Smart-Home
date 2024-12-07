@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, default: null },
   passwordResetToken:String,
   passwordResetTokenExpires:Date,
-  passwordChangeAt:Date
+  passwordChangeAt:Date,
+  isActive:{type:Boolean , default:false}
 });
 userSchema.methods.genToken = function () {
   return jwt.sign(

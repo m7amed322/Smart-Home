@@ -23,7 +23,8 @@ module.exports = {
     }
     const token = user.genToken();
     res.header("x-auth-token", token);
-    res.json({message:"logged in successfully"});
+    res.json({user:user
+      ,message:"logged in successfully"});
   },
   getHome: async (req, res, next) => {
     if (!req.tokenPayload.homeId) {
@@ -53,6 +54,10 @@ module.exports = {
     let user = await User.findOne({email:req.body.email});
     if(!user){
       res.status(400).json({error:"invalid email"});
+      return;
+    }
+    if(!user.isActive){
+      res.status(400).json({error:"check your email inbox"});
       return;
     }
     resetToken=user.createResetToken();
@@ -99,6 +104,21 @@ module.exports = {
       .header("x-auth-token", userToken)
       .json({message:"logged in successfully"});
   },
+  settingPassword: async(req,res,next)=>{
+    if (!req.tokenPayload.id) {
+      res.status(403).json({error:"accsess denied"});
+    }
+    if(req.tokenpayload.isAdmin){
+      res.status(403).json({error:"access denied for admin"})
+    }
+    let user = await User.findOne({_id:req.tokenPayload.id});
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(req.body.password, salt);
+    user.passwordChangeAt=Date.now()
+    user.isActive = true;
+    await user.save()
+    res.json({message:"password changed and user is activated successfully"})
+  }
 };
 function validate(user) {
   const schema = joi.object({
