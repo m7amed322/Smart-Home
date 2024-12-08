@@ -66,7 +66,8 @@ module.exports = {
     await admin.save()
     res.header("x-auth-token", token);
     res.json({ admin:admin
-      ,message: "logged in successfully" });
+      ,message: "logged in successfully",
+    tokenPayload:req.tokenPayload });
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();

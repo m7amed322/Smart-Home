@@ -27,7 +27,7 @@ module.exports = {
     await user.save();
     res.header("x-auth-token", token);
     res.json({user:user
-      ,message:"logged in successfully"});
+      ,message:"logged in successfully",tokenPayload:req.tokenPayload});
   },
   getHome: async (req, res, next) => {
     if (!req.tokenPayload.homeId) {
@@ -49,7 +49,7 @@ module.exports = {
     res
       .status(200)
       .header("x-auth-token", token)
-      .json({user:user,message:"logged in successfully"});
+      .json({user:user,message:"logged in successfully",tokenPayload:req.tokenPayload});
   },
   forgotPassword: async (req,res,next)=>{
     const {error}=joi.object({email:joi.string().email().min(3).max(255).required()}).validate(req.body)

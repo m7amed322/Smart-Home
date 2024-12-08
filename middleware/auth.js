@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
 const {User}=require("../models/user");
+const {Admin}=require("../models/admin");
 const { date } = require("joi");
 module.exports = async function (req, res, next) {
   const token = req.header("x-auth-token");
   let user = await User.findOne({jwt:token , jwtExpires:{$gt:Date.now()}})
-  if(!user || !token )
+  let admin = await Admin.findOne({jwt:token , jwtExpires:{$gt:Date.now()}})
+  if(!user || !token || !admin)
   {
     res.status(401).json({error:"accses denied, no token provided or your token is expired"});
   }
