@@ -13,12 +13,16 @@ const adminSchema = new mongoose.Schema({
   },
   password: { type: String, required: true },
   isAdmin: { type: Boolean, default: true },
+  jwt:String,
+  jwtExpires:Date
 });
 adminSchema.methods.genToken = function () {
-  return jwt.sign(
+  token= jwt.sign(
     { id: this._id, email: this.email, isAdmin: true },
     jwtPrivateKey
   );
+  this.jwtExpires = Date.now()+60*1000*60*24*10;
+  return token;
 };
 const Admin = mongoose.model("admin", adminSchema);
 
