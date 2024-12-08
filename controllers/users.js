@@ -22,8 +22,7 @@ module.exports = {
       return;
     }
     const token = user.genToken();
-    const salt = await bcrypt.genSalt(10);
-    user.jwt = await bcrypt.hash(token, salt);
+    user.jwt = crypto.createHash('sha256').update(token).digest('hex');
     await user.save();
     res.header("x-auth-token", token);
     res.json({user:user
@@ -43,8 +42,7 @@ module.exports = {
     }
     let user = new User(req.user);
     const token = user.genToken();
-    const salt = await bcrypt.genSalt(10);
-    user.jwt = await bcrypt.hash(token, salt);
+    user.jwt = crypto.createHash('sha256').update(token).digest('hex');
     await user.save()
     res
       .status(200)

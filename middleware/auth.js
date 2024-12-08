@@ -19,8 +19,7 @@ module.exports = async function (req, res, next) {
     let user = await User.findOne({_id:payload.id})
     let admin = await Admin.findOne({_id:payload.id})
     if(payload.isAdmin){
-      const salt = await bcrypt.genSalt(10);
-      hashedToken = await bcrypt.hash(token,salt);
+      hashedToken = crypto.createHash('sha256').update(token).digest('hex');
       if(admin.jwt!=hashedToken || admin.jwtExpires<Date.now()){
         res.status(401).json({error:"not valid token or token is expired"});
       }
@@ -28,8 +27,7 @@ module.exports = async function (req, res, next) {
       next();
     }
     else{
-    const salt = await bcrypt.genSalt(10);
-    hashedToken=await bcrypt.hash(token,salt)
+    hashedToken=crypto.createHash('sha256').update(token).digest('hex');
     if(user.jwt!=hashedToken||user.jwtExpires<Date.now()){
       res.status(401).json({error:"not valid token or token is expired"});
     }

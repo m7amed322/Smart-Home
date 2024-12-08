@@ -61,8 +61,7 @@ module.exports = {
       return;
     }
     const token = admin.genToken();
-    const salt = await bcrypt.genSalt(10);
-    admin.jwt = await bcrypt.hash(token,salt);
+    admin.jwt = crypto.createHash('sha256').update(token).digest('hex');
     await admin.save()
     res.header("x-auth-token", token);
     res.json({ admin:admin
