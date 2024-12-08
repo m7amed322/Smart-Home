@@ -23,13 +23,16 @@ module.exports = async function (req, res, next) {
       if(!jwt || admin.jwtExpires<Date.now()){
         res.status(401).json({error:"not valid token or token is expired"});
       }
+
+      req.tokenPayload = payload;
+      next();
     }
     else{
     const jwt=await bcrypt.compare(token,user.jwt);
     if(!jwt||user.jwtExpires<Date.now()){
       res.status(401).json({error:"not valid token or token is expired"});
     }
-  }
     req.tokenPayload = payload;
-    next();
+      next();
+  }
 };
