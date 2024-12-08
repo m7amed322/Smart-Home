@@ -108,9 +108,8 @@ module.exports = {
     if (!req.tokenPayload.id) {
       res.status(403).json({error:"accsess denied"});
     }
-    if(req.tokenpayload.isAdmin){
-      res.status(403).json({tokenpayload:req.tokenPayload
-        ,error:"access denied for admin"})
+    if(req.tokenPayload.isAdmin){
+      res.status(403).json({error:"access denied for admin"})
     }
     let user = await User.findOne({_id:req.tokenPayload.id});
     const salt = await bcrypt.genSalt(10);
