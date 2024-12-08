@@ -20,15 +20,13 @@ module.exports = async function (req, res, next) {
     let admin = await Admin.findOne({_id:payload.id})
     if(payload.isAdmin){
       const jwt=await bcrypt.compare(token,admin.jwt);
-      admin = await Admin.findOne({jwt:jwt , jwtExpires:{$gt:Date.now()}})
-      if(!jwt|| !admin){
+      if(!jwt || admin.jwtExpires<Date.now()){
         res.status(401).json({error:"not valid token or token is expired"});
       }
     }
     else{
     const jwt=await bcrypt.compare(token,user.jwt);
-    user = await User.findOne({jwt:jwt , jwtExpires:{$gt:Date.now()}})
-    if(!jwt||!user){
+    if(!jwt||user.jwtExpires<Date.now()){
       res.status(401).json({error:"not valid token or token is expired"});
     }
   }
