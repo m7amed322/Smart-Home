@@ -4,6 +4,7 @@ const {Admin}=require("../models/admin");
 // require("dotenv").config();
 const bcrypt = require("bcrypt")
 const { date } = require("joi");
+const crypto = require("crypto")
 module.exports = async function (req, res, next) {
   const token = req.header("x-auth-token");
   if( !token )
