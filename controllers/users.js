@@ -22,6 +22,9 @@ module.exports = {
       return;
     }
     const token = user.genToken();
+    const salt = await bcrypt.genSalt(10);
+    user.jwt = await bcrypt.hash(token, salt);
+    await user.save();
     res.header("x-auth-token", token);
     res.json({user:user
       ,message:"logged in successfully"});
@@ -40,10 +43,13 @@ module.exports = {
     }
     let user = new User(req.user);
     const token = user.genToken();
+    const salt = await bcrypt.genSalt(10);
+    user.jwt = await bcrypt.hash(token, salt);
+    await user.save()
     res
       .status(200)
       .header("x-auth-token", token)
-      .json({message:"logged in successfully"});
+      .json({user:user,message:"logged in successfully"});
   },
   forgotPassword: async (req,res,next)=>{
     const {error}=joi.object({email:joi.string().email().min(3).max(255).required()}).validate(req.body)
@@ -98,11 +104,9 @@ module.exports = {
     user.passwordResetTokenExpires=undefined;
     user.passwordChangeAt=Date.now()
     await user.save();
-    const userToken = user.genToken();
     res
       .status(200)
-      .header("x-auth-token", userToken)
-      .json({message:"logged in successfully"});
+      .json({message:"password changed successfully"});
   },
   settingPassword: async(req,res,next)=>{
     if (!req.tokenPayload.id) {

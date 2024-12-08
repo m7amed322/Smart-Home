@@ -30,13 +30,17 @@ const userSchema = new mongoose.Schema({
   passwordResetToken:String,
   passwordResetTokenExpires:Date,
   passwordChangeAt:Date,
-  isActive:{type:Boolean , default:false}
+  isActive:{type:Boolean , default:false},
+  jwt:String,
+  jwtExpires:Date,
 });
 userSchema.methods.genToken = function () {
-  return jwt.sign(
+  let token = jwt.sign(
     { id: this._id, homeId: this.home._id, isAdmin: false },
     jwtPrivateKey
   );
+  this.jwtExpires=Date.now()+60*1000*60*24*10;
+  return token;
 };
 userSchema.methods.createResetToken = function (){
   resetToken =crypto.randomBytes(32).toString('hex');
