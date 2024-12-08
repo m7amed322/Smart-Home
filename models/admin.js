@@ -3,6 +3,7 @@ const joi = require("joi");
 const complexity = require("joi-password-complexity");
 const jwt = require("jsonwebtoken");
 const jwtPrivateKey=process.env.jwtPrivateKey
+// require("dotenv").config();
 const adminSchema = new mongoose.Schema({
   email: {
     type: String,
