@@ -3,6 +3,7 @@ const { Request } = require("../models/request");
 const { Home, validate } = require("../models/home");
 const {User} = require("../models/user");
 const { Admin, validateAdmin } = require("../models/admin");
+const crypto = require("crypto")
 module.exports = {
   getRequest: async (req, res, next) => {
     const request = await Request.find();
