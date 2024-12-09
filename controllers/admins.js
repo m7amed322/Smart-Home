@@ -4,6 +4,7 @@ const { Home, validate } = require("../models/home");
 const {User} = require("../models/user");
 const { Admin, validateAdmin } = require("../models/admin");
 const crypto = require("crypto")
+const _ = require("lodash");
 module.exports = {
   getRequest: async (req, res, next) => {
     const request = await Request.find();
@@ -34,7 +35,7 @@ module.exports = {
       fullName:request.fullName,
       email: request.email,
       password: request.email,
-      home: home,
+      home: _.pick(home,["address", "nRooms"]),
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
