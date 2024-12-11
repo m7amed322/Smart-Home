@@ -11,6 +11,7 @@ const requestSchema = new mongoose.Schema({
   },
   phoneNumber: { type: String, minlength: 5, maxlength: 15, required: true },
   homeAddress: { type: String, minlength: 10, maxlength: 255, required: true },
+  profilePic:String
 });
 const Request = mongoose.model("request", requestSchema);
 function validate(request) {

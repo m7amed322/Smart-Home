@@ -17,6 +17,9 @@ module.exports = {
       phoneNumber: req.body.phoneNumber,
       homeAddress: req.body.homeAddress,
     });
+    if(req.file){
+      request.profilePic = req.file.path
+    }
     await request.save();
     res.json({message:"request sended"});
   },
