@@ -18,7 +18,7 @@ module.exports = {
       homeAddress: req.body.homeAddress,
     });
     if(req.file){
-      request.profilePic = "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/uploads/"+(req.file.path).replace("uploads\\","")
+      request.profilePic = "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/"+(req.file.path).replace("uploads\\","")
     }
     await request.save();
     res.json({message:"request sended"});
