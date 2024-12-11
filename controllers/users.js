@@ -31,6 +31,7 @@ module.exports = {
   getHome: async (req, res, next) => {
     if (!req.tokenPayload.homeId) {
       res.status(403).json({error:"accsess denied"});
+      return;
     }
     const home = await Home.findById(req.tokenPayload.homeId);
     res.json(home);
@@ -109,9 +110,11 @@ module.exports = {
   settingPassword: async(req,res,next)=>{
     if (!req.tokenPayload.id) {
       res.status(403).json({error:"accsess denied"});
+      return;
     }
     if(req.tokenPayload.isAdmin){
       res.status(403).json({error:"access denied for admin"})
+      return;
     }
     let user = await User.findOne({_id:req.tokenPayload.id});
     const salt = await bcrypt.genSalt(10);

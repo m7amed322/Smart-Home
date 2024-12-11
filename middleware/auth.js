@@ -8,6 +8,7 @@ module.exports = async function (req, res, next) {
   const token = req.header("x-auth-token");
   if (!token) {
     res.status(401).json({ error: "accses denied, no token provided " });
+    return;
   }
   try {
     const payload = jwt.verify(token, process.env.jwtPrivateKey);
