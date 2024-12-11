@@ -21,6 +21,8 @@ module.exports = {
       request.profilePic = "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/"+(req.file.path).replace("uploads\\","")
     }
     await request.save();
-    res.json({message:"request sended"});
+    res.json({message:"request sended",
+      request:request
+    });
   },
 };
