@@ -1,12 +1,12 @@
 const bcrypt = require("bcrypt");
 const { Request } = require("../models/request");
 const { Home, validate } = require("../models/home");
-const {User} = require("../models/user");
+const { User } = require("../models/user");
 const { Admin, validateAdmin } = require("../models/admin");
-const crypto = require("crypto")
+const crypto = require("crypto");
 const _ = require("lodash");
 const sendEmail = require("../Utils/email");
-const path =require("path");
+const path = require("path");
 module.exports = {
   getRequest: async (req, res, next) => {
     const request = await Request.find();
@@ -33,33 +33,37 @@ module.exports = {
       nRooms: req.body.nRooms,
     });
     let user = new User({
-      fullName:request.fullName,
+      fullName: request.fullName,
       email: request.email,
       password: request.email,
-      home: _.pick(home,["address", "nRooms"]),
+      home: _.pick(home, ["address", "nRooms"]),
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
-    try{
-    const templatePath = path.join(__dirname,"../Pages/userInfo.html")
-    await sendEmail({
-      email:user.email,
-      subject:`Credentials`,
-      message:"",
-      userEmail:user.email,
-      userPassword:user.email
-    },templatePath);
-    await home.save();
-    await user.save();
-    res.status(200).json({
-      status:"successfully",
-      message:"the credentials mail sent to the user email ,home & user acc created successfully",
-      userEmail: user.email,
-      userPassword: user.email,
-    })
-  }catch(err){
-    return next(err)
-  }
+    try {
+      const templatePath = path.join(__dirname, "../Pages/userInfo.html");
+      await sendEmail(
+        {
+          email: user.email,
+          subject: `Credentials`,
+          message: "",
+          userEmail: user.email,
+          userPassword: user.email,
+        },
+        templatePath
+      );
+      await home.save();
+      await user.save();
+      res.status(200).json({
+        status: "successfully",
+        message:
+          "the credentials mail sent to the user email ,home & user acc created successfully",
+        userEmail: user.email,
+        userPassword: user.email,
+      });
+    } catch (err) {
+      return next(err);
+    }
   },
   logIn: async (req, res, next) => {
     const { error } = validateAdmin(req.body);
@@ -78,12 +82,10 @@ module.exports = {
       return;
     }
     const token = admin.genToken();
-    admin.jwt = crypto.createHash('sha256').update(token).digest('hex');
-    await admin.save()
+    admin.jwt = crypto.createHash("sha256").update(token).digest("hex");
+    await admin.save();
     res.header("x-auth-token", token);
-    res.json({ admin:admin
-      ,message: "logged in successfully",
-    token:token });
+    res.json({ admin: admin, message: "logged in successfully", token: token });
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();

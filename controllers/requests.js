@@ -1,8 +1,8 @@
 const { Request, validate } = require("../models/request");
-const path =require("path");
+const path = require("path");
 const sendEmail = require("../Utils/email");
 module.exports = {
-  createRequest: async (req, res,next) => {
+  createRequest: async (req, res, next) => {
     const { error } = validate(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
@@ -14,30 +14,34 @@ module.exports = {
       return;
     }
     request = new Request({
-      fullName:req.body.fullName,
+      fullName: req.body.fullName,
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
       homeAddress: req.body.homeAddress,
     });
-    if(req.file){
-      request.profilePic = "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/"+(req.file.path).replace("uploads\\","")
+    if (req.file) {
+      request.profilePic =
+        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
+        req.file.path.replace("uploads\\", "");
     }
-    const templatePath  = path.join(__dirname, '../pages/welcomeEmail.html')
-    try{
-      await sendEmail({
-        email:request.email,
-        subject:`Welcome`,
-        message:"",
-        userName:request.fullName
-      },templatePath);
+    const templatePath = path.join(__dirname, "../Pages/welcomeEmail.html");
+    try {
+      await sendEmail(
+        {
+          email: request.email,
+          subject: `Welcome`,
+          message: "",
+          userName: request.fullName,
+        },
+        templatePath
+      );
       await request.save();
       res.status(200).json({
-        status:"successfully",
-        message:" welcome mail sent to the user email"
-      })
-      
-    }catch(err){
-      return next(err)
+        status: "successfully",
+        message: " welcome mail sent to the user email",
+      });
+    } catch (err) {
+      return next(err);
     }
   },
 };
