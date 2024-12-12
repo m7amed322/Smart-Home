@@ -5,6 +5,8 @@ const {User} = require("../models/user");
 const { Admin, validateAdmin } = require("../models/admin");
 const crypto = require("crypto")
 const _ = require("lodash");
+const sendEmail = require("../Utils/email");
+const path =require("path");
 module.exports = {
   getRequest: async (req, res, next) => {
     const request = await Request.find();
@@ -30,7 +32,6 @@ module.exports = {
       userEmail: request.email,
       nRooms: req.body.nRooms,
     });
-    await home.save();
     let user = new User({
       fullName:request.fullName,
       email: request.email,
@@ -39,12 +40,26 @@ module.exports = {
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
+    try{
+    const templatePath = path.join(__dirname,"../Pages/userInfo.html")
+    await sendEmail({
+      email:user.email,
+      subject:`Credentials`,
+      message:"",
+      userEmail:user.email,
+      userPassword:user.email
+    },templatePath);
+    await home.save();
     await user.save();
-    res.json({
-      message: "home & user acc created successfully",
+    res.status(200).json({
+      status:"successfully",
+      message:"the credentials mail sent to the user email ,home & user acc created successfully",
       userEmail: user.email,
       userPassword: user.email,
-    });
+    })
+  }catch(err){
+    return next(err)
+  }
   },
   logIn: async (req, res, next) => {
     const { error } = validateAdmin(req.body);

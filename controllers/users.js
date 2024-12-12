@@ -4,6 +4,8 @@ const joi = require("joi");
 const { Home } = require("../models/home");
 const sendEmail = require("../Utils/email");
 const crypto = require("crypto");
+const path =require("path");
+const fs = require("fs");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -69,20 +71,24 @@ module.exports = {
     await user.save();
     // resetUrl=`${req.protocol}://${req.get('host')}/api/users/reset/${resetToken}`
     resetUrl =`localhost:5173/reset-pass/${resetToken}`
-    const message = `we have recieved a password reset request. please use the below link to reset your password
-    \n
-    ${resetUrl}\n\n this is reset password link will be valid only for 10 mins.
-    `;
+    // const message = `we have recieved a password reset request. please use the below link to reset your password
+    // \n
+    // ${resetUrl}\n\n this is reset password link will be valid only for 10 mins.
+    // `;
     try{
+      const templatePath = path.join(__dirname,"../Pages/resetPassword.html")
     await sendEmail({
       email:user.email,
       subject:`resetting password request`,
-      message:message
-    });
+      message:"",
+      resetUrl:resetUrl
+    },templatePath);
+    
     res.status(200).json({
       status:"successfully",
       message:"password reset link sent to the user email"
     })
+    
   }catch(err){
     user.passwordResetToken=undefined;
     user.passwordResetTokenExpires=undefined;

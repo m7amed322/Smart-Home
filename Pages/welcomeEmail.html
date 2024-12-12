@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Our Community</title>
+  <style>
+    body,
+    table,
+    td {
+      padding: 0;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .header-container {
+      background-color: #06507f;
+      text-align: center;
+      padding: 1rem 0;
+      border-radius: 5px;
+    }
+
+    .header-container img {
+      max-width: 45%;
+      height: auto;
+      display: inline;
+    }
+
+    .header-container h1 {
+      font-size: 2rem;
+      color: white;
+      margin: 0;
+    }
+
+    .header-container p {
+      font-size: 16px;
+      margin: 10px 0;
+      color: white;
+    }
+
+    .section {
+      padding: 30px;
+      text-align: center;
+      background: #f4f4f4;
+    }
+
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #06507f;
+    }
+
+    .service-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .service-item {
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      background-color: #06507f;
+      border-radius: 30px;
+      width: 100%;
+      max-width: 15rem;
+      padding: 10px;
+    }
+
+    .service-item img {
+      width: 100%;
+      max-width: 250px;
+      margin: 10px 0;
+      height: auto;
+    }
+
+    .service-item h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .service-item p {
+      font-size: 14px;
+      color: white;
+    }
+
+    footer {
+      background-color: #06507f;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    footer a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    footer img {
+      margin: 0 5px;
+      vertical-align: middle;
+    }
+
+    .footer-links {
+      margin: 20px 0;
+    }
+
+    .footer-links a {
+      margin: 0 15px;
+      font-size: 14px;
+    }
+
+    .footer-info {
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .footer-info p {
+      margin: 5px 0;
+    }
+
+    @media only screen and (max-width: 768px) {
+      .header-container h1,
+      .header-container p {
+        font-size: 20px;
+      }
+    }
+
+    @media only screen and (max-width: 480px) {
+      .header-container h1,
+      .header-container p {
+        font-size: 18px;
+      }
+
+      .service-item h3 {
+        font-size: 16px;
+      }
+
+      .service-item p {
+        font-size: 12px;
+      }
+
+      .footer-links a {
+        font-size: 12px;
+        margin: 0 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #cccccc; padding: 20px;">
+          <tr>
+            <td class="header-container">
+              <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733932135/welcome-people_ftxdgj.png" alt="Welcome">
+              <h1>Hi {{userName}},</h1>
+              <h1>Welcome to Our Community</h1>
+              <p>Thank you for choosing us. We're excited to have you on board!</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="section">
+              <h2>Let's Get Started</h2>
+              <div class="service-container">
+                <div class="service-item">
+                  <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733930076/Analysis-pana_jphppe.png" alt="Energy Monitoring">
+                  <h3>Energy Monitoring</h3>
+                  <p>Gain insights into energy usage patterns and optimize your appliance usage to save on energy costs.</p>
+                </div>
+                <div class="service-item">
+                  <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733930053/Smart_home-cuate_hihvtg.png" alt="Automation & Control">
+                  <h3>Automation & Control</h3>
+                  <p>Enhance energy management through automation, creating a sustainable and cost-effective environment.</p>
+                </div>
+                <div class="service-item">
+                  <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733930053/Login-bro_awotuo.png" alt="Privacy & Protection">
+                  <h3>Privacy & Protection</h3>
+                  <p>Your data privacy is our priority with secure authentication, encrypted storage, and robust access controls.</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <footer>
+                <div class="footer-links">
+                  <a href="https://example.com">Privacy Policy</a> |
+                  <a href="https://example.com">Terms of Service</a> |
+                  <a href="https://example.com">Contact Us</a>
+                </div>
+                <div>
+                  <a href="https://facebook.com"><img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931551/facebook_lcdj3s.png" alt="Facebook" width="20" height="20"></a>
+                  <a href="https://twitter.com"><img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931552/x_m3jgdm.png" alt="Twitter" width="20" height="20"></a>
+                  <a href="https://instagram.com"><img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931551/instagram_btfqp4.png" alt="Instagram" width="20" height="20"></a>
+                </div>
+                <div class="footer-info">
+                  <p>© 2024 Your Company. All Rights Reserved.</p>
+                  <p>Suez, Egypt</p>
+                </div>
+              </footer>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

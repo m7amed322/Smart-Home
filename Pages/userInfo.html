@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credentials Email</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            flex-grow: 1;
+            background-color: white;
+            text-align: center;
+            border-radius: 15px;
+            color: black;
+        }
+
+        hr {
+            background-color: #06507F;
+            height: 1px;
+            width: 50%;
+            margin-top: 30px;
+            border: none;
+        }
+
+        .credentials {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .credentials p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        footer {
+            background-color: #06507F;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        footer img {
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .footer-links {
+            margin: 20px 0;
+        }
+
+        .footer-links a {
+            margin: 0 15px;
+            font-size: 14px;
+        }
+
+        .footer-info {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .footer-info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header style="background-color: #f4f4f4; padding: 10px;">
+        <h1>Logo</h1>
+    </header>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td style="background-image: url('https://res.cloudinary.com/dotkbk7wp/image/upload/v1733786192/user-info_qvclx8.png'); background-position: center; background-repeat: no-repeat; background-size: contain; height: 200px;">
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; font-size: 16px; line-height: 1;">
+                <h1>Your Account Credentials</h1>
+                <p style="padding: 5px 20px;">You requested to receive your account information. Here are your login details:</p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 5px; text-align: center; font-size: 16px;">
+                <div class="credentials">
+                    <p>Email: <strong>{{userEmail}}</strong></p>
+                    <p>Password: <strong>{{userPassword}}</strong></p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <hr>
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center;">
+                <p>If you didn't request your credentials, We recommend that you change your password after logging in.</p>
+                <p style="font-weight: bold;">Note: Please Don't Share your credentials with any one</p>
+            </td>
+        </tr>
+    </table>
+    <footer>
+        <div class="footer-links">
+            <a href="https://example.com">Privacy Policy</a> |
+            <a href="https://example.com">Terms of Service</a> |
+            <a href="https://example.com">Contact Us</a>
+        </div>
+        <div>
+            <a href="https://facebook.com">
+                <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931551/facebook_lcdj3s.png" alt="Facebook" width="20" height="20">
+            </a>
+            <a href="https://twitter.com">
+                <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931552/x_m3jgdm.png" alt="Twitter" width="20" height="20">
+            </a>
+            <a href="https://instagram.com">
+                <img src="https://res.cloudinary.com/dotkbk7wp/image/upload/v1733931551/instagram_btfqp4.png" alt="Instagram" width="20" height="20">
+                        </a>
+                    </div>
+                    <div class="footer-info">
+                        <p>© 2024 Your Company. All Rights Reserved.</p>
+                        <p>Suez, Egypt</p>
+                    </div>
+                </footer>
+</body>
+</html>

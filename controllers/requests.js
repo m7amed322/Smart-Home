@@ -1,6 +1,8 @@
 const { Request, validate } = require("../models/request");
+const path =require("path");
+const sendEmail = require("../Utils/email");
 module.exports = {
-  createRequest: async (req, res) => {
+  createRequest: async (req, res,next) => {
     const { error } = validate(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
@@ -20,9 +22,22 @@ module.exports = {
     if(req.file){
       request.profilePic = "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/"+(req.file.path).replace("uploads\\","")
     }
-    await request.save();
-    res.json({message:"request sended",
-      request:request
-    });
+    const templatePath  = path.join(__dirname, '../pages/welcomeEmail.html')
+    try{
+      await sendEmail({
+        email:request.email,
+        subject:`Welcome`,
+        message:"",
+        userName:request.fullName
+      },templatePath);
+      await request.save();
+      res.status(200).json({
+        status:"successfully",
+        message:" welcome mail sent to the user email"
+      })
+      
+    }catch(err){
+      return next(err)
+    }
   },
 };
