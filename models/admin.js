@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const jwtPrivateKey = process.env.jwtPrivateKey;
 // require("dotenv").config();
 const adminSchema = new mongoose.Schema({
+  fullName: { type: String, minlength: 3, maxlength: 255, required: true },
   email: {
     type: String,
     minlength: 3,

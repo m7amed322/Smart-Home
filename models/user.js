@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
         maxlength: 255,
         required: true,
       },
-      nRooms: { type: Number, min: 0, max: 10, required: true },
+      householdSize: { type: Number, min: 0, max: 10, required: true },
     }),
   },
   isAdmin: { type: Boolean, default: false },
