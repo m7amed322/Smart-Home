@@ -30,12 +30,20 @@ module.exports = {
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
-    if (!req.tokenPayload.homeId) {
+    if (req.tokenPayload.isAdmin) {
       res.status(403).json({ error: "accsess denied" });
       return;
     }
     const home = await Home.findById(req.tokenPayload.homeId);
     res.json(home);
+  },
+  getMe:async (req, res, next) => {
+    if (req.tokenPayload.isAdmin) {
+      res.status(403).json({ error: "accsess denied" });
+      return;
+    }
+    const user = await User.findById(req.tokenPayload.id);
+    res.json(user);
   },
   googleLogIn: async (req, res, next) => {
     if (!req.user) {
