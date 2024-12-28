@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: false },
   jwt: String,
   jwtExpires: Date,
-  profilePic: String,
+  userProfilePic: String,
 });
 userSchema.methods.genToken = function () {
   let token = jwt.sign(

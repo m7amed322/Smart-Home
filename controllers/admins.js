@@ -94,25 +94,25 @@ module.exports = {
     const home = await Home.find();
     res.send(home);
   },
-    createAdmin:async (req,res)=>{
-      const {error} = validateAdmin(req.body)
-      if(error){
-        res.status(400).json(error.details[0].message)
-        return;
-      }
-      let admin = await Admin.findOne({email:req.body.email});
-      if(admin){
-        res.status(400).json("already registered");
-        return;
-      }
-      admin = new Admin({
-        fullName:req.body.fullName,
-        email:req.body.email,
-        password:req.body.password
-      })
-      const salt =await  bcrypt.genSalt(10);
-      admin.password = await bcrypt.hash(req.body.password,salt);
-      await admin.save()
-      res.json("admin created successfully")
-    }
+    // createAdmin:async (req,res)=>{
+    //   const {error} = validateAdmin(req.body)
+    //   if(error){
+    //     res.status(400).json(error.details[0].message)
+    //     return;
+    //   }
+    //   let admin = await Admin.findOne({email:req.body.email});
+    //   if(admin){
+    //     res.status(400).json("already registered");
+    //     return;
+    //   }
+    //   admin = new Admin({
+    //     fullName:req.body.fullName,
+    //     email:req.body.email,
+    //     password:req.body.password
+    //   })
+    //   const salt =await  bcrypt.genSalt(10);
+    //   admin.password = await bcrypt.hash(req.body.password,salt);
+    //   await admin.save()
+    //   res.json("admin created successfully")
+    // }
 };

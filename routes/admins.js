@@ -8,5 +8,5 @@ router.post("/createHomeAndAcc", [auth, admin], adminController.createHomeAndAcc
 router.post("/login", adminController.logIn);
 router.get("/readHomes", [auth, admin], adminController.getHomes);
 // create admin
-router.post("/",adminController.createAdmin)
+// router.post("/",adminController.createAdmin)
 module.exports = router;
