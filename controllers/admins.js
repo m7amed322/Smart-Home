@@ -39,6 +39,7 @@ module.exports = {
       email: request.email,
       password: request.email,
       home: _.pick(home, ["address", "householdSize","_id"]),
+      profilePic:request.profilePic
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
