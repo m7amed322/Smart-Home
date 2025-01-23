@@ -1,9 +1,8 @@
 const {Resend} = require ("resend");
 const { text } = require("express");
-const nodemailer = require("nodemailer");
 const handlebars = require("handlebars");
 const fs = require("fs");
-const resend= new Resend("re_EETNRwPt_9KuKn6rEprjCBJqAYZ9VZfeB")
+const resend= new Resend(process.env.Resend_API_Key)
   const sendEmail=async(option,templatePath)=>{
     let htmlContent = fs.readFileSync(templatePath, "utf-8");
     let template = handlebars.compile(htmlContent);
