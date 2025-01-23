@@ -11,7 +11,6 @@ module.exports = function (app) {
     origin:'*',
     exposedHeaders:['x-auth-token']
   }));
-  // app.use(cors({origin:"https://smartthomee.netlify.app"}))
   app.use(express.json());
  
   app.use("/api/sendRequests", requests);

@@ -47,7 +47,6 @@ module.exports = {
       const templatePath = path.join(__dirname, "../Pages/userInfo.html");
       await sendEmail(
         {
-          email: user.email,
           subject: `Credentials`,
           message: "",
           userEmail: user.email,

@@ -88,7 +88,6 @@ module.exports = {
       const templatePath = path.join(__dirname, "../Pages/resetPassword.html");
       await sendEmail(
         {
-          email: user.email,
           subject: `resetting password request`,
           message: "",
           resetUrl: resetUrl,

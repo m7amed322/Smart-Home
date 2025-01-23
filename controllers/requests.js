@@ -1,6 +1,6 @@
 const { Request, validate } = require("../models/request");
 const path = require("path");
-const sendEmail = require("../Utils/email");
+const sendEmail = require("../Utils/emaiil");
 module.exports = {
   createRequest: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -28,7 +28,6 @@ module.exports = {
     try {
       await sendEmail(
         {
-          email: request.email,
           subject: `Welcome`,
           message: "",
           userName: request.fullName,
