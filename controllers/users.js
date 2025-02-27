@@ -6,6 +6,7 @@ const sendEmail = require("../Utils/emaiil");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
+const { Support,supportValidate } = require("../models/support");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -146,6 +147,20 @@ module.exports = {
       message: "password changed and user is activated successfully",
     });
   },
+  support:async(req,res,next)=>{
+    const { error } = supportValidate(req.body);
+    if (error) {
+      res.status(400).json(error.details[0].message);
+      return;
+    }
+    const user = await User.findOne({ _id: req.tokenPayload.id });
+    const schema = new Support({
+      user:user,
+      message:req.body.message
+    })
+    await schema.save()
+    res.json({user:user,message:"message sent to admins successfully"});
+  }
 };
 function validate(user) {
   const schema = joi.object({

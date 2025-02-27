@@ -11,6 +11,7 @@ const resend= new Resend(process.env.Resend_API_Key)
       userEmail: option.userEmail,
       userPassword: option.userPassword,
       resetUrl: option.resetUrl,
+      reply:option.reply
     };
     let replacedHtml = template(replacements);
     await resend.emails.send({

@@ -7,6 +7,9 @@ const crypto = require("crypto");
 const _ = require("lodash");
 const sendEmail = require("../Utils/emaiil");
 const path = require("path");
+const { Support } = require("../models/support");
+const joi = require("joi");
+joi.objectId = require("joi-objectid")(joi);
 module.exports = {
   getRequest: async (req, res, next) => {
     const request = await Request.find();
@@ -93,6 +96,45 @@ module.exports = {
     const home = await Home.find();
     res.send(home);
   },
+  getSupport:async(req,res,next)=>{
+    const support = await Support.find();
+    res.send(support);
+  },
+  getUsers:async(req,res,next)=>{
+    const user = await User.find();
+    res.send(user);
+  },
+  replySupport:async(req,res,next)=>{
+    const{error}=joi.object({
+      message:joi.string().min(3).max(255).required(),
+      userId:joi.objectId().required()
+    }).validate(req.body);
+    if(error){
+      res.status(400).json(error.details[0].message);
+      return;
+    }
+    const user=await User.findOne({_id:req.body.userId});
+    
+    try {
+      const templatePath = path.join(__dirname, "../Pages/reply.html");
+      await sendEmail(
+        {
+          subject: `resetting password request`,
+          message: "",
+          reply: req.body.message,
+        },
+        templatePath
+      );
+      await Support.deleteOne({'user._id':user._id})
+      res.status(200).json({
+        status: "successfully",
+        message: "email sent with reply",
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+  
     // createAdmin:async (req,res)=>{
     //   const {error} = validateAdmin(req.body)
     //   if(error){
