@@ -42,7 +42,8 @@ module.exports = {
       email: request.email,
       password: request.email,
       home: _.pick(home, ["address", "householdSize","_id"]),
-      userProfilePic:request.profilePic
+      userProfilePic:request.profilePic,
+      phoneNumber:request.phoneNumber
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
@@ -119,7 +120,7 @@ module.exports = {
       const templatePath = path.join(__dirname, "../Pages/reply.html");
       await sendEmail(
         {
-          subject: `resetting password request`,
+          subject: `replying your support`,
           message: "",
           reply: req.body.message,
         },

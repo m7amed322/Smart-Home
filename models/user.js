@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   jwt: String,
   jwtExpires: Date,
   userProfilePic: String,
+  phoneNumber: { type: String, minlength: 5, maxlength: 15, required: true },
 });
 userSchema.methods.genToken = function () {
   let token = jwt.sign(
