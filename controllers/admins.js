@@ -146,6 +146,10 @@ module.exports = {
     const user = await User.findOne({_id:req.params.id});
     res.json({user:user});
   },
+  getRequestById:async(req,res,next)=>{
+    const request = await Request.findOne({_id:req.params.id});
+    res.json({request:request});
+  },
   
     // createAdmin:async (req,res)=>{
     //   const {error} = validateAdmin(req.body)

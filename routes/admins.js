@@ -13,6 +13,7 @@ router.get("/readHome/:id", [auth, admin], adminController.getHomesById);
 router.get("/user/:id",[auth,admin],adminController.getUsersById)
 router.get("/support/:id",[auth,admin],adminController.getSupportById)
 router.post("/replySupport/:id",[auth,admin],adminController.replySupport)
+router.get("/request/:id",[auth,admin],adminController.getRequestById)
 
 // create admin
 // router.post("/",adminController.createAdmin)
