@@ -21,7 +21,7 @@ module.exports = {
     });
     if (req.file) {
       request.profilePic =
-        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/uploads/" +
+        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
         req.file.path.replace("uploads\\", "");
 
     }
