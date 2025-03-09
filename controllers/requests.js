@@ -21,8 +21,9 @@ module.exports = {
     });
     if (req.file) {
       request.profilePic =
-        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
+        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/uploads/" +
         req.file.path.replace("uploads\\", "");
+
     }
     const templatePath = path.join(__dirname, "../Pages/welcomeEmail.html");
     try {

@@ -9,7 +9,10 @@ router.post("/login", adminController.logIn);
 router.get("/readHomes", [auth, admin], adminController.getHomes);
 router.get("/users",[auth,admin],adminController.getUsers)
 router.get("/support",[auth,admin],adminController.getSupport)
-router.post("/replySupport",[auth,admin],adminController.replySupport)
+router.get("/readHome/:id", [auth, admin], adminController.getHomesById);
+router.get("/user/:id",[auth,admin],adminController.getUsersById)
+router.get("/support/:id",[auth,admin],adminController.getSupportById)
+router.post("/replySupport/:id",[auth,admin],adminController.replySupport)
 
 // create admin
 // router.post("/",adminController.createAdmin)

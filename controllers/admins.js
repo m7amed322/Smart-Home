@@ -95,26 +95,25 @@ module.exports = {
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();
-    res.send(home);
+    res.json({homes:home})
   },
   getSupport:async(req,res,next)=>{
     const support = await Support.find();
-    res.send(support);
+    res.json({supports:support})
   },
   getUsers:async(req,res,next)=>{
     const user = await User.find();
-    res.send(user);
+    res.json({users:user});
   },
   replySupport:async(req,res,next)=>{
     const{error}=joi.object({
       message:joi.string().min(3).max(255).required(),
-      userId:joi.objectId().required()
     }).validate(req.body);
     if(error){
       res.status(400).json(error.details[0].message);
       return;
     }
-    const user=await User.findOne({_id:req.body.userId});
+    const support=await Support.findOne({_id:req.params.id});
     
     try {
       const templatePath = path.join(__dirname, "../Pages/reply.html");
@@ -126,7 +125,7 @@ module.exports = {
         },
         templatePath
       );
-      await Support.deleteOne({'user._id':user._id})
+      await Support.deleteOne({_id:support._id})
       res.status(200).json({
         status: "successfully",
         message: "email sent with reply",
@@ -134,7 +133,19 @@ module.exports = {
     } catch (err) {
       return next(err);
     }
-  }
+  },
+  getHomesById: async (req, res, next) => {
+    const home = await Home.findOne({_id:req.params.id});
+    res.json({home:home});
+  },
+  getSupportById:async(req,res,next)=>{
+    const support = await Support.findOne({_id:req.params.id});
+    res.json({support:support});
+  },
+  getUsersById:async(req,res,next)=>{
+    const user = await User.findOne({_id:req.params.id});
+    res.json({user:user});
+  },
   
     // createAdmin:async (req,res)=>{
     //   const {error} = validateAdmin(req.body)
