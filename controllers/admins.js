@@ -20,8 +20,7 @@ module.exports = {
     res.json(request);
   },
   createHomeAndAcc: async (req, res, next) => {
-    const { error } = 
-    (req.body);
+    const { error } = req.body;
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
@@ -35,15 +34,15 @@ module.exports = {
       address: request.homeAddress,
       userEmail: request.email,
       householdSize: req.body.householdSize,
-      userFullName:request.fullName
+      userFullName: request.fullName,
     });
     let user = new User({
       fullName: request.fullName,
       email: request.email,
       password: request.email,
-      home: _.pick(home, ["address", "householdSize","_id"]),
-      userProfilePic:request.profilePic,
-      phoneNumber:request.phoneNumber
+      home: _.pick(home, ["address", "householdSize", "_id"]),
+      userProfilePic: request.profilePic,
+      phoneNumber: request.phoneNumber,
     });
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
@@ -55,6 +54,7 @@ module.exports = {
           message: "",
           userEmail: user.email,
           userPassword: user.email,
+          email:user.email
         },
         templatePath
       );
@@ -95,26 +95,29 @@ module.exports = {
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();
-    res.json({homes:home})
+    res.json({ homes: home });
   },
-  getSupport:async(req,res,next)=>{
+  getSupport: async (req, res, next) => {
     const support = await Support.find();
-    res.json({supports:support})
+    res.json({ supports: support });
   },
-  getUsers:async(req,res,next)=>{
+  getUsers: async (req, res, next) => {
     const user = await User.find();
-    res.json({users:user});
+    res.json({ users: user });
   },
-  replySupport:async(req,res,next)=>{
-    const{error}=joi.object({
-      message:joi.string().min(3).max(255).required(),
-    }).validate(req.body);
-    if(error){
+  replySupport: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        message: joi.string().min(3).max(255).required(),
+        supportId:joi.objectId().required(),
+      })
+      .validate(req.body);
+    if (error) {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const support=await Support.findOne({_id:req.params.id});
-    
+    const support = await Support.findOne({ _id: req.body.supportId });
+
     try {
       const templatePath = path.join(__dirname, "../Pages/reply.html");
       await sendEmail(
@@ -122,10 +125,11 @@ module.exports = {
           subject: `replying your support`,
           message: "",
           reply: req.body.message,
+          email:support.user.email
         },
         templatePath
       );
-      await Support.deleteOne({_id:support._id})
+      await Support.deleteOne({ _id: support._id });
       res.status(200).json({
         status: "successfully",
         message: "email sent with reply",
@@ -135,41 +139,40 @@ module.exports = {
     }
   },
   getHomesById: async (req, res, next) => {
-    const home = await Home.findOne({_id:req.params.id});
-    res.json({home:home});
+    const home = await Home.findOne({ _id: req.params.id });
+    res.json({ home: home });
   },
-  getSupportById:async(req,res,next)=>{
-    const support = await Support.findOne({_id:req.params.id});
-    res.json({support:support});
+  getSupportById: async (req, res, next) => {
+    const support = await Support.findOne({ _id: req.params.id });
+    res.json({ support: support });
   },
-  getUsersById:async(req,res,next)=>{
-    const user = await User.findOne({_id:req.params.id});
-    res.json({user:user});
+  getUsersById: async (req, res, next) => {
+    const user = await User.findOne({ _id: req.params.id });
+    res.json({ user: user });
   },
-  getRequestById:async(req,res,next)=>{
-    const request = await Request.findOne({_id:req.params.id});
-    res.json({request:request});
+  getRequestById: async (req, res, next) => {
+    const request = await Request.findOne({ _id: req.params.id });
+    res.json({ request: request });
   },
-  
-    // createAdmin:async (req,res)=>{
-    //   const {error} = validateAdmin(req.body)
-    //   if(error){
-    //     res.status(400).json(error.details[0].message)
-    //     return;
-    //   }
-    //   let admin = await Admin.findOne({email:req.body.email});
-    //   if(admin){
-    //     res.status(400).json("already registered");
-    //     return;
-    //   }
-    //   admin = new Admin({
-    //     fullName:req.body.fullName,
-    //     email:req.body.email,
-    //     password:req.body.password
-    //   })
-    //   const salt =await  bcrypt.genSalt(10);
-    //   admin.password = await bcrypt.hash(req.body.password,salt);
-    //   await admin.save()
-    //   res.json("admin created successfully")
-    // }
+  // createAdmin:async (req,res)=>{
+  //   const {error} = validateAdmin(req.body)
+  //   if(error){
+  //     res.status(400).json(error.details[0].message)
+  //     return;
+  //   }
+  //   let admin = await Admin.findOne({email:req.body.email});
+  //   if(admin){
+  //     res.status(400).json("already registered");
+  //     return;
+  //   }
+  //   admin = new Admin({
+  //     fullName:req.body.fullName,
+  //     email:req.body.email,
+  //     password:req.body.password
+  //   })
+  //   const salt =await  bcrypt.genSalt(10);
+  //   admin.password = await bcrypt.hash(req.body.password,salt);
+  //   await admin.save()
+  //   res.json("admin created successfully")
+  // }
 };

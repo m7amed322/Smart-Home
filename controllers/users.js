@@ -92,6 +92,7 @@ module.exports = {
           subject: `resetting password request`,
           message: "",
           resetUrl: resetUrl,
+          email:req.body.email
         },
         templatePath
       );

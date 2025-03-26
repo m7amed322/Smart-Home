@@ -30,8 +30,8 @@ module.exports = {
       await sendEmail(
         {
           subject: `Welcome`,
-          message: "",
           userName: request.fullName,
+          email:request.email
         },
         templatePath
       );
