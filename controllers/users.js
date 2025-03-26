@@ -80,7 +80,7 @@ module.exports = {
     resetToken = user.createResetToken();
     await user.save();
     // resetUrl=`${req.protocol}://${req.get('host')}/api/users/reset/${resetToken}`
-    resetUrl = `localhost:5173/reset-pass/${resetToken}`;
+    resetUrl = `http://localhost:5173/reset-pass/${resetToken}`;
     // const message = `we have recieved a password reset request. please use the below link to reset your password
     // \n
     // ${resetUrl}\n\n this is reset password link will be valid only for 10 mins.
