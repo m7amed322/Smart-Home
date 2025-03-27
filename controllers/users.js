@@ -90,9 +90,8 @@ module.exports = {
       await sendEmail(
         {
           subject: `resetting password request`,
-          message: "",
           resetUrl: resetUrl,
-          email:req.body.email
+          to:req.body.email
         },
         templatePath
       );

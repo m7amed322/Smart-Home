@@ -17,10 +17,10 @@ async function createTransporter() {
     if (!accessToken.token) throw new Error('Failed to obtain access token');
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // Gmail SMTP service
+      service: 'gmail',
       auth: {
-        type: 'OAuth2',       // Authentication method
-        user: process.env.Email_User, // Sender’s Gmail address
+        type: 'OAuth2',
+        user: process.env.Email_User,
         clientId: process.env.clientID,
         clientSecret: process.env.clientSecret,
         refreshToken: process.env.refresh_token,
@@ -37,8 +37,7 @@ async function createTransporter() {
 
 
   
-// Exported function to send emails
-//option => {email,subject,text}
+//option => {to,subject,text}
 async function sendEmail(option,templatePath) {
   
   try {
@@ -56,7 +55,7 @@ async function sendEmail(option,templatePath) {
 
     const emailOptions = {
       from: "Smart Home support<support@smartHome.com>",
-      to:option.email,
+      to:option.to,
       subject:option.subject,
       text:option.text,
       html: replacedHtml,

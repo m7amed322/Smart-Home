@@ -31,7 +31,7 @@ module.exports = {
         {
           subject: `Welcome`,
           userName: request.fullName,
-          email:request.email
+          to:request.email
         },
         templatePath
       );

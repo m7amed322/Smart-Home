@@ -51,10 +51,9 @@ module.exports = {
       await sendEmail(
         {
           subject: `Credentials`,
-          message: "",
           userEmail: user.email,
           userPassword: user.email,
-          email:user.email
+          to:user.email
         },
         templatePath
       );
@@ -119,13 +118,12 @@ module.exports = {
     const support = await Support.findOne({ _id: req.body.supportId });
 
     try {
-      const templatePath = path.join(__dirname, "../Pages/reply.html");
+      const templatePath = path.join(__dirname, "../Pages/supportEmail.html");
       await sendEmail(
         {
           subject: `replying your support`,
-          message: "",
           reply: req.body.message,
-          email:support.user.email
+          to:support.user.email
         },
         templatePath
       );
