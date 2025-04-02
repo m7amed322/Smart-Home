@@ -6,7 +6,7 @@ const sendEmail = require("../Utils/emaiil");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
-const { Support,supportValidate } = require("../models/support");
+const { Support,supportValidate } = require("../models/support.js");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -160,6 +160,15 @@ module.exports = {
     })
     await schema.save()
     res.json({user:user,message:"message sent to admins successfully"});
+  },
+  logout:async(req,res,next)=>{
+  const user = await User.findOne({_id:req.tokenPayload.id});
+  user.jwt = undefined;
+  user.jwtExpires=undefined;
+  await user.save();
+  res.status(200).json({
+    message:`user: ${user.email} logged out`
+  })
   }
 };
 function validate(user) {

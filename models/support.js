@@ -1,10 +1,11 @@
-const {userSchema} =require("../models/user")
+const {userSchema} =require("./user")
 const mongoose = require("mongoose");
 const joi = require("joi");
 joi.objectId = require("joi-objectid")(joi);
 const supportSchema = new mongoose.Schema({
     user:{type:userSchema,required:true},
-    message:{type:String,min:3,max:255,required:true,default:"we looked about your problem and we will contact with you as soon as possible"}
+    message:{type:String,min:3,max:255,required:true,default:"we looked about your problem and we will contact with you as soon as possible"},
+    responsed:{type:Boolean,default:false}
 });
 const Support = mongoose.model("support", supportSchema);
 function supportValidate(support) {

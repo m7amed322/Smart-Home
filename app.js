@@ -1,13 +1,18 @@
 const express = require("express")
 const winston = require("winston")
+const {createServer} = require("node:http");
+const Server = require("socket.io")
 const app = express()
+const server = createServer(app);
+const io = new Server(server);
 require("./startup/logging")();
 require("./startup/config")();
-require("./startup/routes")(app);
+require("./startup/routes")(app,io);
 require("./startup/db")();
 require("./startup/prod")(app);
+require("./startup/socket")(io);
 app.use('/api/uploads',express.static('uploads'))
 const port = process.env.PORT || 1000
-app.listen(port,()=>{
+server.listen(port,()=>{
     winston.info(`listening to port ${port}...`)
 })

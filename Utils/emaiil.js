@@ -50,6 +50,7 @@ async function sendEmail(option,templatePath) {
     userEmail: option.userEmail,
     userPassword: option.userPassword,
     resetUrl: option.resetUrl,
+    replay:option.replay
   };
   let replacedHtml = template(replacements);
 

@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const _ = require("lodash");
 const sendEmail = require("../Utils/emaiil");
 const path = require("path");
-const { Support } = require("../models/support");
+const { Support } = require("../models/support.js");
 const joi = require("joi");
 joi.objectId = require("joi-objectid")(joi);
 module.exports = {
@@ -57,8 +57,11 @@ module.exports = {
         },
         templatePath
       );
+      request.read=true;
+      await request.save()
       await home.save();
       await user.save();
+      
       res.status(200).json({
         status: "successfully",
         message:
@@ -127,7 +130,8 @@ module.exports = {
         },
         templatePath
       );
-      await Support.deleteOne({ _id: support._id });
+      support.responsed=true;
+      await support.save();
       res.status(200).json({
         status: "successfully",
         message: "email sent with reply",
@@ -152,6 +156,17 @@ module.exports = {
     const request = await Request.findOne({ _id: req.params.id });
     res.json({ request: request });
   },
+  deleteUserAndHome:async(req,res,next)=>{
+    const user =await User.findByIdAndDelete(req.params.id);
+    const home = await Home.findOneAndDelete({userEmail:user.email})
+    if(!user){
+      res.status(404).json("user not found");
+      return;
+    }
+    res.status(200).json({
+      message:`user: ${user.email} and his home is deleted`
+    })
+  }
   // createAdmin:async (req,res)=>{
   //   const {error} = validateAdmin(req.body)
   //   if(error){
