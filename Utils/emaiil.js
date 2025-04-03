@@ -3,8 +3,8 @@ const { google } = require('googleapis');
 const handlebars = require("handlebars")
 const fs = require("fs");
 const oauth2Client = new google.auth.OAuth2(
-  process.env.clientID,          
-  process.env.clientSecret,      
+  process.env.CLIENT_ID,          
+  process.env.CLIENT_SECRET,      
   'https://developers.google.com/oauthplayground' 
 );
 oauth2Client.setCredentials({
