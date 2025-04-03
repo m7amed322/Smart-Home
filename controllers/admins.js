@@ -159,6 +159,7 @@ module.exports = {
   deleteUserAndHome:async(req,res,next)=>{
     const user =await User.findByIdAndDelete(req.params.id);
     const home = await Home.findOneAndDelete({userEmail:user.email})
+    const support = await Support.findOneAndDelete({user:user.email});
     if(!user){
       res.status(404).json("user not found");
       return;
