@@ -8,7 +8,7 @@ const oauth2Client = new google.auth.OAuth2(
   'https://developers.google.com/oauthplayground' 
 );
 oauth2Client.setCredentials({
-  refresh_token: process.env.refresh_token 
+  refresh_token: process.env.REFRESH_TOKEN
 });
 
 async function createTransporter() {
