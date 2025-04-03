@@ -126,7 +126,7 @@ module.exports = {
         {
           subject: `replying your support`,
           reply: req.body.message,
-          to:support.user.email
+          to:support.user.email,
         },
         templatePath
       );
