@@ -6,11 +6,11 @@ const auth = require("../middleware/auth");
 const userController = require("../controllers/users");
 router.post("/login", userController.logIn);
 router.get("/home", auth, userController.getHome);
-router.post(
-  "/oauth/google",
-  passport.authenticate("googleToken", { session: false }),
-  userController.googleLogIn
-);
+// router.post(
+//   "/oauth/google",
+//   passport.authenticate("googleToken", { session: false }),
+//   userController.googleLogIn
+// );
 router.post("/forgot",userController.forgotPassword);
 router.patch("/reset/:token",userController.resetPassword)
 router.post("/settingPassword",auth,userController.settingPassword)
