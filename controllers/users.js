@@ -154,6 +154,10 @@ module.exports = {
       return;
     }
     const user = await User.findOne({ _id: req.tokenPayload.id });
+    if(await Support.findOne({"user._id":user._id,responsed:false})){
+      res.status(400).json("you already sent a support before wait for its responding then you can send a new one");
+      return;
+    }
     const schema = new Support({
       user:user,
       message:req.body.message
