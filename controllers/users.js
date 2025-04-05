@@ -1,4 +1,5 @@
 const { User } = require("../models/user");
+const mqttService = require("../Utils/mqtt.js");
 const bcrypt = require("bcrypt");
 const joi = require("joi");
 const { Home } = require("../models/home");
@@ -6,7 +7,7 @@ const sendEmail = require("../Utils/emaiil");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
-const { Support,supportValidate } = require("../models/support.js");
+const { Support, supportValidate } = require("../models/support.js");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -38,7 +39,7 @@ module.exports = {
     const home = await Home.findById(req.tokenPayload.homeId);
     res.json(home);
   },
-  getMe:async (req, res, next) => {
+  getMe: async (req, res, next) => {
     if (req.tokenPayload.isAdmin) {
       res.status(403).json({ error: "accsess denied" });
       return;
@@ -91,7 +92,7 @@ module.exports = {
         {
           subject: `resetting password request`,
           resetUrl: resetUrl,
-          to:req.body.email
+          to: req.body.email,
         },
         templatePath
       );
@@ -147,33 +148,57 @@ module.exports = {
       message: "password changed and user is activated successfully",
     });
   },
-  support:async(req,res,next)=>{
+  support: async (req, res, next) => {
     const { error } = supportValidate(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
     }
     const user = await User.findOne({ _id: req.tokenPayload.id });
-    if(await Support.findOne({"user._id":user._id,responsed:false})){
-      res.status(400).json("you already sent a support before wait for its responding then you can send a new one");
+    if (await Support.findOne({ "user._id": user._id, responsed: false })) {
+      res
+        .status(400)
+        .json(
+          "you already sent a support before wait for its responding then you can send a new one"
+        );
       return;
     }
     const schema = new Support({
-      user:user,
-      message:req.body.message
-    })
-    await schema.save()
-    res.json({user:user,message:"message sent to admins successfully"});
+      user: user,
+      message: req.body.message,
+    });
+    await schema.save();
+    res.json({ user: user, message: "message sent to admins successfully" });
   },
-  logout:async(req,res,next)=>{
-  const user = await User.findOne({_id:req.tokenPayload.id});
-  user.jwt = undefined;
-  user.jwtExpires=undefined;
-  await user.save();
-  res.status(200).json({
-    message:`user: ${user.email} logged out`
-  })
-  }
+  logout: async (req, res, next) => {
+    const user = await User.findOne({ _id: req.tokenPayload.id });
+    user.jwt = undefined;
+    user.jwtExpires = undefined;
+    await user.save();
+    res.status(200).json({
+      message: `user: ${user.email} logged out`,
+    });
+  },
+  controlLed: async (req, res, next) => {
+    const { roomName, state, ledNumber } = req.body;
+    if (!roomName || !state || !ledNumber) {
+      res.status(400).json({
+        success: false,
+        message: "Missing required fields: roomName, state, or ledNumber",
+      });
+      return;
+    }
+    const result = await mqttService.controlLed(
+      req.tokenPayload.homeId,
+      roomName,
+      state,
+      ledNumber
+    );
+    res.json({
+      success: true,
+      message: result,
+    });
+  },
 };
 function validate(user) {
   const schema = joi.object({

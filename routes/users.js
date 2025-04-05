@@ -16,5 +16,6 @@ router.patch("/reset/:token",userController.resetPassword)
 router.post("/settingPassword",auth,userController.settingPassword)
 router.get("/me",auth,userController.getMe)
 router.post("/support",auth,userController.support)
-router.post("/logout",auth,userController.logout)
+router.post("/logout",auth,userController.logout);
+router.post("/control",auth,userController.controlLed);
 module.exports = router;
