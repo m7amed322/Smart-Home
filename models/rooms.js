@@ -2,22 +2,21 @@ const mongoose = require("mongoose");
 const { sequentialSchema } = require("./sequentials");
 const { predictionSchema } = require("./predictions");
 const roomSchema = new mongoose.Schema({
-  name: { type: String, minlength: 6, maxlength: 12, required: true },
+  name: {
+    type: String,
+    minlength: 6,
+    maxlength: 12,
+    required: true,
+    enum: {
+      values: ["bedroom", "guestroom", "dinningroom", "livingroom", "corridor"],
+    },
+  },
   led: {
     number: {
       type: Number,
       min: 1,
-      max: 6,
+      max: 3,
       required: true,
-      enum: {
-        values: [
-          "bedroom",
-          "guestroom",
-          "dinningroom",
-          "livingroom",
-          "corridor",
-        ],
-      },
     },
     seqs: {
       type: [sequentialSchema],

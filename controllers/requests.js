@@ -1,6 +1,6 @@
 const { Request, validate } = require("../models/request");
 const path = require("path");
-const sendEmail = require("../Utils/emaiil");
+const sendEmail = require("../Services/emaiil");
 module.exports = {
   createRequest: async (req, res, next) => {
     const { error } = validate(req.body);

@@ -1,13 +1,20 @@
 const { User } = require("../models/user");
-const mqttService = require("../Utils/mqtt.js");
+const mqttService = require("../Services/mqtt.js");
 const bcrypt = require("bcrypt");
 const joi = require("joi");
 const { Home } = require("../models/home");
-const sendEmail = require("../Utils/emaiil");
+const sendEmail = require("../Services/emaiil.js");
 const crypto = require("crypto");
 const path = require("path");
 const fs = require("fs");
 const { Support, supportValidate } = require("../models/support.js");
+const { Sequential } = require("../models/sequentials.js");
+const { Device } = require("../models/devices.js");
+const predict = require("../Services/consumptionPrediction.js");
+const { Prediction } = require("../models/predictions.js");
+const _ = require("lodash");
+const AlertService = require("../Services/alert.js");
+const userService = require("../Services/user.js");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -197,6 +204,52 @@ module.exports = {
     res.json({
       success: true,
       message: result,
+    });
+  },
+  createSequence: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        durationInMin: joi.number().min(1).max(60).required(),
+        temp: joi.number().min(2).max(50).required(),
+        occuped: joi.string().required(),
+        deviceName: joi.string().min(3).max(255).required(),
+      })
+      .validate(req.body);
+    if (error) {
+      res.status(400).json(error.details[0].message);
+      return;
+    }
+    const { seq, device } = await userService.createSequence(
+      req.tokenPayload.homeId,
+      req.body
+    );
+    if (device.seqs.length == 12) {
+      const pred = await userService.handlePrediction(device, predict, req.io);
+      return pred;
+    }
+    res.json({
+      message: "Successfully created sequence",sequence:seq,prediction:pred
+    });
+  },
+  createDevice: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        name: joi.string().min(3).max(255).required(),
+      })
+      .validate(req.body);
+    if (error) {
+      res.status(400).json(error.details[0].message);
+      return;
+    }
+    const device = new Device({
+      name: req.body.name,
+      homeId: req.tokenPayload.homeId,
+    });
+    await device.save();
+    const pred = new Prediction({ device: _.pick(device, ["name", "homeId"]) });
+    await pred.save();
+    res.json({
+      message: "successfully device created",
     });
   },
 };

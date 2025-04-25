@@ -1,12 +1,20 @@
 const mongoose = require("mongoose");
+const { deviceSchema } = require("../models/devices");
 const predictionSchema = new mongoose.Schema({
-  after_1hour: {type:Number,required:true,default:undefined},
-  after_2hour:{type:Number,required:true,default:undefined},
-  after_3hour: {type:Number,required:true,default:undefined},
-  after_4hour:{type:Number,required:true,default:undefined},
-  after_5hour:{type:Number,required:true,default:undefined},
-  after_6hour:{type:Number,required:true,default:undefined}
+  after_1hour: { type: Number, required: true, default: 0 },
+  after_2hour: { type: Number, required: true, default: 0 },
+  after_3hour: { type: Number, required: true, default: 0 },
+  after_4hour: { type: Number, required: true, default: 0 },
+  after_5hour: { type: Number, required: true, default: 0 },
+  after_6hour: { type: Number, required: true, default: 0 },
+  device: {
+    type: new mongoose.Schema({
+      name: { type: String, minlength: 3, maxlength: 255, required: true },
+      homeId: { type: String, required: true },
+    }),
+    required: true,
+  },
 });
-const Prediction= mongoose.model("prediction", predictionSchema);
+const Prediction = mongoose.model("prediction", predictionSchema);
 exports.Prediction = Prediction;
-exports.predictionSchema=predictionSchema;
+exports.predictionSchema = predictionSchema;
