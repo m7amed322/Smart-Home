@@ -67,7 +67,6 @@ const userService = {
         prediction.after_5hour = prediction.after_6hour;
         prediction.after_6hour = predValue;
         await prediction.save();
-        console.log(prediction);
         device.preds = prediction;
         await device.save();
         const user = await User.findOne({ "home._id": device.homeId });
@@ -76,7 +75,6 @@ const userService = {
             user._id,
             `from the device:${device.name} the predicted value after 6 hours:${predValue} `,io
           );
-          console.log(alert);
         }
         return prediction;
       }

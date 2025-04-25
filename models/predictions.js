@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { deviceSchema } = require("../models/devices");
 const predictionSchema = new mongoose.Schema({
   after_1hour: { type: Number, required: true, default: 0 },
   after_2hour: { type: Number, required: true, default: 0 },
