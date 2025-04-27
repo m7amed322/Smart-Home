@@ -1,19 +1,9 @@
-const { User } = require("../models/user");
 const mqttService = require("../Services/mqtt.js");
-const bcrypt = require("bcrypt");
 const joi = require("joi");
-const { Home } = require("../models/home");
-const sendEmail = require("../Services/emaiil.js");
-const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
-const { Support, supportValidate } = require("../models/support.js");
-const { Sequential } = require("../models/sequentials.js");
 const { Device } = require("../models/devices.js");
 const predict = require("../Services/consumptionPrediction.js");
 const { Prediction } = require("../models/predictions.js");
 const _ = require("lodash");
-const AlertService = require("../Services/alert.js");
 const userService = require("../Services/user.js");
 module.exports = {
   logIn: async (req, res, next) => {
@@ -22,51 +12,36 @@ module.exports = {
       res.status(400).json(error.details[0].message);
       return;
     }
-    let user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      res.status(400).json({ error: "invalid email or password" });
-      return;
-    }
-    const pass = await bcrypt.compare(req.body.password, user.password);
-    if (!pass) {
-      res.status(400).json({ error: "invalid email or password" });
-      return;
-    }
-    const token = user.genToken();
-    user.jwt = crypto.createHash("sha256").update(token).digest("hex");
-    await user.save();
-    res.header("x-auth-token", token);
+    const { user, token } = await userService.logIn(
+      req.body.email,
+      req.body.password
+    );
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
-    if (req.tokenPayload.isAdmin) {
-      res.status(403).json({ error: "accsess denied" });
-      return;
-    }
-    const home = await Home.findById(req.tokenPayload.homeId);
+    const home = await userService.getHome(
+      req.tokenPayload.isAdmin,
+      req.tokenPayload.homeId
+    );
     res.json(home);
   },
   getMe: async (req, res, next) => {
-    if (req.tokenPayload.isAdmin) {
-      res.status(403).json({ error: "accsess denied" });
-      return;
-    }
-    const user = await User.findById(req.tokenPayload.id);
+    const user = await userService.getMe(req.tokenPayload.id);
     res.json(user);
   },
   googleLogIn: async (req, res, next) => {
-    if (!req.user) {
-      res.status(400).json({ error: "unauthorized" });
-      return;
-    }
-    let user = new User(req.user);
-    const token = user.genToken();
-    user.jwt = crypto.createHash("sha256").update(token).digest("hex");
-    await user.save();
-    res
-      .status(200)
-      .header("x-auth-token", token)
-      .json({ user: user, message: "logged in successfully", token: token });
+    const { user, token } = await userService.googleLogIn(req.user);
+    res.json({ user: user, message: "logged in successfully", token: token });
+  },
+  firstTimePassword: async (req, res, next) => {
+    const password = await userService.firstTimePassword(
+      req.tokenPayload.id,
+      req.body.password
+    );
+    res.json({
+      message: "password changed and user is activated successfully",
+      password: password,
+    });
   },
   forgotPassword: async (req, res, next) => {
     const { error } = joi
@@ -76,84 +51,21 @@ module.exports = {
       res.status(400).json(error.details[0].message);
       return;
     }
-    let user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      res.status(400).json({ error: "invalid email" });
-      return;
-    }
-    if (!user.isActive) {
-      res.status(400).json({ error: "check your email inbox" });
-      return;
-    }
-    resetToken = user.createResetToken();
-    await user.save();
-    // resetUrl=`${req.protocol}://${req.get('host')}/api/users/reset/${resetToken}`
-    resetUrl = `http://localhost:5173/reset-pass/${resetToken}`;
-    // const message = `we have recieved a password reset request. please use the below link to reset your password
-    // \n
-    // ${resetUrl}\n\n this is reset password link will be valid only for 10 mins.
-    // `;
-    try {
-      const templatePath = path.join(__dirname, "../Pages/resetPassword.html");
-      await sendEmail(
-        {
-          subject: `resetting password request`,
-          resetUrl: resetUrl,
-          to: req.body.email,
-        },
-        templatePath
-      );
-
-      res.status(200).json({
-        status: "successfully",
-        message: "password reset link sent to the user email",
-      });
-    } catch (err) {
-      user.passwordResetToken = undefined;
-      user.passwordResetTokenExpires = undefined;
-      await user.save();
-      return next(err);
-    }
+    const resetUrl = await userService.forgotPassword(req.body.email);
+    res.json({
+      status: "successfully",
+      message: "password reset link sent to the user email",
+      resetUrl: resetUrl,
+    });
   },
   resetPassword: async (req, res, next) => {
-    const token = crypto
-      .createHash("sha256")
-      .update(req.params.token)
-      .digest("hex");
-    const user = await User.findOne({
-      passwordResetToken: token,
-      passwordResetTokenExpires: { $gt: Date.now() },
-    });
-    if (!user) {
-      res.status(400).json("not valid token");
-      return;
-    }
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
-    user.passwordResetToken = undefined;
-    user.passwordResetTokenExpires = undefined;
-    user.passwordChangeAt = Date.now();
-    await user.save();
-    res.status(200).json({ message: "password changed successfully" });
-  },
-  settingPassword: async (req, res, next) => {
-    if (!req.tokenPayload.id) {
-      res.status(403).json({ error: "accsess denied" });
-      return;
-    }
-    if (req.tokenPayload.isAdmin) {
-      res.status(403).json({ error: "access denied for admin" });
-      return;
-    }
-    let user = await User.findOne({ _id: req.tokenPayload.id });
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
-    user.passwordChangeAt = Date.now();
-    user.isActive = true;
-    await user.save();
-    res.json({
-      message: "password changed and user is activated successfully",
-    });
+    const password = await userService.resetPassword(
+      req.params.token,
+      req.body.password
+    );
+    res
+      .status(200)
+      .json({ message: "password changed successfully", password: password });
   },
   support: async (req, res, next) => {
     const { error } = supportValidate(req.body);
@@ -161,29 +73,20 @@ module.exports = {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const user = await User.findOne({ _id: req.tokenPayload.id });
-    if (await Support.findOne({ "user._id": user._id, responsed: false })) {
-      res
-        .status(400)
-        .json(
-          "you already sent a support before wait for its responding then you can send a new one"
-        );
-      return;
-    }
-    const schema = new Support({
+    const { user, support } = await userService.support(
+      req.body.message,
+      req.tokenPayload.id
+    );
+    res.json({
       user: user,
-      message: req.body.message,
+      message: "message sent to admins successfully",
+      support: support,
     });
-    await schema.save();
-    res.json({ user: user, message: "message sent to admins successfully" });
   },
   logout: async (req, res, next) => {
-    const user = await User.findOne({ _id: req.tokenPayload.id });
-    user.jwt = undefined;
-    user.jwtExpires = undefined;
-    await user.save();
+    const email = await userService.logout(req.tokenPayload.id);
     res.status(200).json({
-      message: `user: ${user.email} logged out`,
+      message: `user: ${email} logged out`,
     });
   },
   controlLed: async (req, res, next) => {
@@ -223,12 +126,14 @@ module.exports = {
       req.tokenPayload.homeId,
       req.body
     );
+    let pred;
     if (device.seqs.length == 12) {
-      const pred = await userService.handlePrediction(device, predict, req.io);
-      return pred;
+      pred = await userService.handlePrediction(device, predict, req.io);
     }
-    res.json({
-      message: "Successfully created sequence",sequence:seq,prediction:pred
+    res.status(200).json({
+      message: "Successfully created sequence",
+      sequence: seq,
+      pred:pred
     });
   },
   createDevice: async (req, res, next) => {

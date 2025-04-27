@@ -13,7 +13,6 @@ module.exports = async function (req, res, next) {
   try {
     const payload = jwt.verify(token, process.env.jwtPrivateKey);
   } catch (err) {
-    res.status(400).json({ error: "not valid token" });
     next(err);
   }
   let payload = jwt.verify(token, process.env.jwtPrivateKey);

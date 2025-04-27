@@ -13,7 +13,7 @@ router.get("/home", auth, userController.getHome);
 // );
 router.post("/forgot", userController.forgotPassword);
 router.patch("/reset/:token", userController.resetPassword);
-router.post("/settingPassword", auth, userController.settingPassword);
+router.post("/firstTimePassword", auth, userController.firstTimePassword);
 router.get("/me", auth, userController.getMe);
 router.post("/support", auth, userController.support);
 router.post("/logout", auth, userController.logout);
