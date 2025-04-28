@@ -3,13 +3,14 @@ const  AlertService ={
   createAlert: async (userId, message,io=null)=> {
     try {
       const alert = new Alert({ userId, message });
-      await alert.save();
+      
       if (io) {
         io.to(userId).emit("alert", {
           id: alert._id,
           message,
           createdAt: alert.createdAt,
         });
+        await alert.save();
       }
       return alert;
     } catch (error) {

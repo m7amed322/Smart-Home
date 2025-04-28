@@ -18,6 +18,7 @@ module.exports = {
       req.body.email,
       req.body.password
     );
+    console.log(req.io);
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
@@ -128,14 +129,18 @@ module.exports = {
       req.tokenPayload.homeId,
       req.body
     );
-    let pred;
-    if (device.seqs.length == 12) {
-      pred = await userService.handlePrediction(device, predict, req.io);
-    }
+
+    const { pred, alert } = await userService.handlePrediction(
+      device,
+      predict,
+      req.io
+    );
+
     res.status(200).json({
       message: "Successfully created sequence",
       sequence: seq,
       pred: pred,
+      alert: alert,
     });
   },
   createDevice: async (req, res, next) => {
@@ -212,7 +217,7 @@ module.exports = {
     try {
       const home = await Home.findOne({
         _id: req.tokenPayload.homeId,
-        "devices._id":req.body.deviceId
+        "devices._id": req.body.deviceId,
       });
       if (!home) {
         res.status(400).json("device was not found in your home");

@@ -95,14 +95,15 @@ const userService = {
         });
         await device.save();
         const user = await User.findOne({ "home._id": device.homeId });
+        let alert;
         if (predValue > 50) {
-          const alert = await AlertService.createAlert(
+           alert = await AlertService.createAlert(
             user._id,
             `from the device:${device.name} the predicted value after 6 hours:${predValue} `,
             io
           );
         }
-        return prediction;
+        return {prediction, alert};
       }
       return;
     } catch (err) {
