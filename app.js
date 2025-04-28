@@ -4,7 +4,10 @@ const {createServer} = require("node:http");
 const {Server} = require("socket.io")
 const app = express()
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server,{cors:{
+      origin: "*",
+      exposedHeaders: ["x-auth-token"],
+    }});
 require("./startup/logging")();
 require("./startup/config")();
 require("./startup/routes")(app,io);
