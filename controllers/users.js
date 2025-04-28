@@ -210,7 +210,6 @@ module.exports = {
       return;
     }
     try {
-      await Device.findByIdAndDelete(req.body.deviceId);
       const home = await Home.findOne({
         _id: req.tokenPayload.homeId,
         "devices._id":req.body.deviceId
@@ -219,6 +218,7 @@ module.exports = {
         res.status(400).json("device was not found in your home");
         return;
       }
+      await Device.findByIdAndDelete(req.body.deviceId);
       const devicesOfHome = _.filter(home.devices, (obj) => {
         return obj._id != req.body.deviceId;
       });
