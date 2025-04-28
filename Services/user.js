@@ -21,10 +21,17 @@ const userService = {
       if (!device) {
         throw new Error("device of this home not found ");
       }
-      const deviceNameInSeq = seqData.deviceName.slice(
-        0,
-        seqData.deviceName.length - 1
-      );
+      const sameNameDevices = await Device.find({
+        name: new RegExp(`^${seqData.deviceName}.?$`, "i"),
+        homeId: homeId,
+      });
+      let deviceNameInSeq = seqData.deviceName;
+      if (sameNameDevices.length > 1) {
+        deviceNameInSeq = seqData.deviceName.slice(
+          0,
+          seqData.deviceName.length - 1
+        );
+      }
       const seq = new Sequential({
         home_id: homeId,
         appliance: deviceNameInSeq,
@@ -97,13 +104,13 @@ const userService = {
         const user = await User.findOne({ "home._id": device.homeId });
         let alert;
         if (predValue > 50) {
-           alert = await AlertService.createAlert(
+          alert = await AlertService.createAlert(
             user._id,
             `from the device:${device.name} the predicted value after 6 hours:${predValue} `,
             io
           );
         }
-        return {prediction, alert};
+        return { prediction, alert };
       }
       return;
     } catch (err) {
