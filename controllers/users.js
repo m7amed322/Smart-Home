@@ -5,6 +5,8 @@ const predict = require("../Services/consumptionPrediction.js");
 const { Prediction } = require("../models/predictions.js");
 const _ = require("lodash");
 const userService = require("../Services/user.js");
+const { Home } = require("../models/home.js");
+const { Sequential } = require("../models/sequentials.js");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -133,7 +135,7 @@ module.exports = {
     res.status(200).json({
       message: "Successfully created sequence",
       sequence: seq,
-      pred:pred
+      pred: pred,
     });
   },
   createDevice: async (req, res, next) => {
@@ -146,16 +148,100 @@ module.exports = {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const device = new Device({
-      name: req.body.name,
-      homeId: req.tokenPayload.homeId,
-    });
-    await device.save();
-    const pred = new Prediction({ device: _.pick(device, ["name", "homeId"]) });
-    await pred.save();
-    res.json({
-      message: "successfully device created",
-    });
+    try {
+      let name = "";
+      const sameNameDevices = await Device.find({
+        name: new RegExp(`^${req.body.name}.?$`, "i"),
+        homeId: req.tokenPayload.homeId,
+      });
+      if (sameNameDevices.length == 0) {
+        name = req.body.name;
+      } else if (sameNameDevices.length == 1) {
+        await Device.updateOne(
+          { _id: sameNameDevices[0]._id },
+          { $set: { name: req.body.name + 1 } }
+        );
+        const firstPred = await Prediction.find({
+          "device.homeId": req.tokenPayload.homeId,
+          "device.name": req.body.name,
+        });
+        await Prediction.updateOne(
+          { _id: firstPred[0]._id },
+          { $set: { "device.name": req.body.name + 1 } }
+        );
+        name = req.body.name + 2;
+      } else {
+        const deviceNumber = parseInt(
+          sameNameDevices[sameNameDevices.length - 1].name[
+            sameNameDevices[sameNameDevices.length - 1].name.length - 1
+          ]
+        );
+        name = req.body.name + (deviceNumber + 1);
+      }
+      const device = new Device({
+        name: name,
+        homeId: req.tokenPayload.homeId,
+      });
+      const pred = new Prediction({
+        "device.name": device.name,
+        "device.homeId": device.homeId,
+        "device.id": device._id,
+      });
+      await device.save();
+      await pred.save();
+      const home = await Home.findOne({ _id: req.tokenPayload.homeId });
+      home.devices = await Device.find({ homeId: req.tokenPayload.homeId });
+      await home.save();
+      res.json({
+        message: "successfully device created",
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+  deleteDevice: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        deviceId: joi.string().min(3).max(255).required(),
+      })
+      .validate(req.body);
+    if (error) {
+      res.status(400).json(error.details[0].message);
+      return;
+    }
+    try {
+      await Device.findByIdAndDelete(req.body.deviceId);
+      const home = await Home.findOne({
+        _id: req.tokenPayload.homeId,
+        "devices._id":req.body.deviceId
+      });
+      if (!home) {
+        res.status(400).json("device was not found in your home");
+        return;
+      }
+      const devicesOfHome = _.filter(home.devices, (obj) => {
+        return obj._id != req.body.deviceId;
+      });
+      home.devices = devicesOfHome;
+
+      await home.save();
+
+      await Prediction.findOneAndDelete({
+        "device.id": req.body.deviceId,
+        "device.homeId": req.tokenPayload.homeId,
+      });
+
+      await Sequential.deleteMany({
+        device_id: req.body.deviceId,
+        home_id: req.tokenPayload.homeId,
+      });
+
+      res.json(
+        "device deleted successfully with its prediction , sequences and from this home's devices also"
+      );
+    } catch (err) {
+      next(err);
+    }
   },
 };
 function validate(user) {

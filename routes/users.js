@@ -20,4 +20,5 @@ router.post("/logout", auth, userController.logout);
 router.post("/control", auth, userController.controlLed);
 router.post("/createDevice", auth, userController.createDevice);
 router.post("/createSeq", auth, userController.createSequence);
+router.delete("/device",auth,userController.deleteDevice);
 module.exports = router;

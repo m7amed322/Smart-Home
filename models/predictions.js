@@ -10,10 +10,12 @@ const predictionSchema = new mongoose.Schema({
     type: new mongoose.Schema({
       name: { type: String, minlength: 3, maxlength: 255, required: true },
       homeId: { type: String, required: true },
+      id:{ type: String, required: true }
     }),
     required: true,
   },
 });
+
 const Prediction = mongoose.model("prediction", predictionSchema);
 exports.Prediction = Prediction;
 exports.predictionSchema = predictionSchema;

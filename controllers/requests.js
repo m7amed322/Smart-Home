@@ -39,6 +39,7 @@ module.exports = {
       res.status(200).json({
         status: "successfully",
         message: " welcome mail sent to the user email",
+        request:req
       });
     } catch (err) {
       return next(err);

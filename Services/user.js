@@ -21,30 +21,39 @@ const userService = {
       if (!device) {
         throw new Error("device of this home not found ");
       }
+      const deviceNameInSeq = seqData.deviceName.slice(
+        0,
+        seqData.deviceName.length - 1
+      );
       const seq = new Sequential({
         home_id: homeId,
-        appliance: seqData.deviceName,
+        appliance: deviceNameInSeq,
         temperature_setting_C: seqData.temp,
         occupancy_status: seqData.occuped,
         usage_duration_minutes: seqData.durationInMin,
+        device_id: device._id,
       });
       const seqs = await Sequential.find({
         home_id: homeId,
-        appliance: seq.appliance,
+        device_id: device._id,
       });
       if (seqs.length == 0) {
         seq.number = 1;
       } else if (seqs.length > 0 && seqs.length < 12) {
         seq.number = parseInt(seqs[seqs.length - 1].number) + 1;
-      } else {
+      } else if (seqs.length == 12) {
         const n = seqs[0].number;
-        await Sequential.deleteOne({ number: n });
+        await Sequential.deleteOne({
+          number: n,
+          device_id: device._id,
+          home_id: homeId,
+        });
         seq.number = n;
       }
       await seq.save();
       device.seqs = await Sequential.find({
         home_id: homeId,
-        appliance: seq.appliance,
+        device_id: device._id,
       });
       await device.save();
       return { seq, device };
@@ -70,6 +79,7 @@ const userService = {
         const prediction = await Prediction.findOne({
           "device.name": device.name,
           "device.homeId": device.homeId,
+          "device.id": device._id,
         });
         prediction.after_1hour = prediction.after_2hour;
         prediction.after_2hour = prediction.after_3hour;
@@ -78,10 +88,14 @@ const userService = {
         prediction.after_5hour = prediction.after_6hour;
         prediction.after_6hour = predValue;
         await prediction.save();
-        device.preds = prediction;
+        device.preds = await Prediction.findOne({
+          "device.name": device.name,
+          "device.homeId": device.homeId,
+          "device.id": device._id,
+        });
         await device.save();
         const user = await User.findOne({ "home._id": device.homeId });
-        if (prediction.after_6hour > 50) {
+        if (predValue > 50) {
           const alert = await AlertService.createAlert(
             user._id,
             `from the device:${device.name} the predicted value after 6 hours:${predValue} `,
@@ -90,7 +104,7 @@ const userService = {
         }
         return prediction;
       }
-      return null;
+      return;
     } catch (err) {
       throw err;
     }
@@ -207,7 +221,7 @@ const userService = {
     await support.save();
     return { user, support };
   }),
-  logout:wrapper(async(userId)=>{
+  logout: wrapper(async (userId) => {
     const user = await User.findOne({ _id: userId });
     if (!user) {
       throw new Error("access denied");
@@ -216,6 +230,6 @@ const userService = {
     user.jwtExpires = undefined;
     await user.save();
     return user.email;
-  })
+  }),
 };
 module.exports = userService;

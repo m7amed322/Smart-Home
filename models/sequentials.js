@@ -24,7 +24,8 @@ const sequentialSchema = new mongoose.Schema({
     default: undefined,
   },
   appliance: { type: String, required: true },
-  home_id: { type: String,  required: true },
+  home_id: { type: String,required:true},
+  device_id:{type:String,required:true}
 });
 const Sequential = mongoose.model("sequential", sequentialSchema);
 exports.Sequential = Sequential;
