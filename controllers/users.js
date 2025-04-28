@@ -130,7 +130,7 @@ module.exports = {
       req.body
     );
 
-    const { pred, alert } = await userService.handlePrediction(
+    const { prediction, alert } = await userService.handlePrediction(
       device,
       predict,
       req.io
@@ -139,7 +139,7 @@ module.exports = {
     res.status(200).json({
       message: "Successfully created sequence",
       sequence: seq,
-      pred: pred,
+      pred: prediction,
       alert: alert,
     });
   },
