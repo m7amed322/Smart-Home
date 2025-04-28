@@ -112,7 +112,7 @@ const userService = {
         }
         return { prediction, alert };
       }
-      return;
+      return { prediction: null, alert: null };
     } catch (err) {
       throw err;
     }
