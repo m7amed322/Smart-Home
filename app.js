@@ -6,7 +6,6 @@ const app = express()
 const server = createServer(app);
 const io = new Server(server,{cors:{
       origin: "*",
-      exposedHeaders: ["x-auth-token"],
       credentials:true
     }});
 require("./startup/logging")();
