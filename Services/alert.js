@@ -5,10 +5,11 @@ const  AlertService ={
       const alert = new Alert({ userId, message });
       
       if (io) {
-        io.to(userId).emit("alert", {
+        io.emit(`${userId}`, {
           id: alert._id,
           message,
           createdAt: alert.createdAt,
+          userId:userId
         });
         await alert.save();
       }

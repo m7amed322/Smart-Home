@@ -1,7 +1,7 @@
-module.exports = (io) => {
-    io.on('connection', (socket) => {
-        socket.on('Joining', (userId) => {
-            socket.join(userId);
-        });
-    });
-};
+// module.exports = (io) => {
+//     io.on('connection', (socket) => {
+//         socket.on('Joining', (userId) => {
+//             socket.join(userId);
+//         });
+//     });
+// };
