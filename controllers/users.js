@@ -135,7 +135,7 @@ module.exports = {
       predict,
       req.io
     );
-
+    
     res.status(200).json({
       message: "Successfully created sequence",
       sequence: seq,
