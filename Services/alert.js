@@ -34,10 +34,17 @@ const AlertService = {
   markAsRead:wrapper(async(userId)=>{
     const alert = await Alert.findOne({ userId:userId,read:false });
     if (!alert) {
-      throw new Error("not alerts not readed");
+      throw new Error("no alerts not readed");
     }
     await Alert.updateMany({userId:userId,read:false},{$set:{read:true}});
     return "all alerts is readed"
+  }),
+  getAlerts:wrapper(async(userId)=>{
+    const alerts = await Alert.find({userId:userId});
+    if (!alerts) {
+      throw new Error("no alerts for now");
+    }
+    return alerts;
   })
 };
 module.exports = AlertService;

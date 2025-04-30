@@ -266,6 +266,12 @@ module.exports = {
       message: message,
     });
   },
+  getAlerts:async(req,res,next)=>{
+    const alerts =await AlertService.getAlerts(req.tokenPayload.id);
+    res.json({
+      alerts:alerts
+    });
+  }
 };
 function validate(user) {
   const schema = joi.object({

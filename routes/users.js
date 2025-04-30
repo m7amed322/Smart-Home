@@ -17,6 +17,7 @@ router.post("/firstTimePassword", auth, userController.firstTimePassword);
 router.get("/me", auth, userController.getMe);
 router.get("/alert/Unread",auth,userController.unreadAlerts);
 router.get("/alert/:id",auth,userController.alertById);
+router.get("/alerts",auth,userController.getAlerts);
 router.put("/alert/markAllAsRead",auth,userController.markAllAsRead);
 router.post("/support", auth, userController.support);
 router.post("/logout", auth, userController.logout);
