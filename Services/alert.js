@@ -8,7 +8,7 @@ const AlertService = {
       io.emit(`${userId}`, {
         id: alert._id,
         message,
-        createdAt: alert.createdAt,
+        createdAt: new Date(),
         userId: userId,
       });
       await alert.save();
