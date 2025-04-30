@@ -1,10 +1,10 @@
 //where i will prepare the function that call the model api 
+const _ = require("lodash");
 function getRandom(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
 }
-const _ = require("lodash");
  const predict= (sequence) => {
     if (sequence.length == 12) {
       keys = Object.keys(sequence[0]);

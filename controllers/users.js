@@ -1,12 +1,13 @@
 const mqttService = require("../Services/mqtt.js");
 const joi = require("joi");
 const { Device } = require("../models/devices.js");
-const predict = require("../Services/consumptionPrediction.js");
+const predict = require("../utils/consumptionPrediction.js");
 const { Prediction } = require("../models/predictions.js");
 const _ = require("lodash");
 const userService = require("../Services/user.js");
 const { Home } = require("../models/home.js");
 const { Sequential } = require("../models/sequentials.js");
+const AlertService = require("../Services/alert.js");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validate(req.body);
@@ -18,7 +19,6 @@ module.exports = {
       req.body.email,
       req.body.password
     );
-    console.log(req.io);
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
@@ -135,7 +135,7 @@ module.exports = {
       predict,
       req.io
     );
-    
+
     res.status(200).json({
       message: "Successfully created sequence",
       sequence: seq,
@@ -247,6 +247,24 @@ module.exports = {
     } catch (err) {
       next(err);
     }
+  },
+  unreadAlerts: async (req, res, next) => {
+    const alerts = await AlertService.getUnread(req.tokenPayload.id);
+    res.json({
+      unreadAlerts: alerts,
+    });
+  },
+  alertById: async (req, res, next) => {
+    const alert = await AlertService.getById(req.params.id);
+    res.json({
+      alert: alert,
+    });
+  },
+  markAllAsRead: async (req, res, next) => {
+    const message = await AlertService.markAsRead(req.tokenPayload.id);
+    res.json({
+      message: message,
+    });
   },
 };
 function validate(user) {

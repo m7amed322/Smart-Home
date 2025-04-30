@@ -11,7 +11,7 @@
 //     }
 //   };
 const winston = require("winston");
-// require("dotenv").config();
+require("dotenv").config();
 module.exports = function () {
   if (!process.env.db_password) {
     winston.error("Environment variables not set.");
