@@ -2,8 +2,7 @@ const { Alert } = require("../models/alert");
 const { wrapper } = require("../utils/helper");
 const AlertService = {
   createAlert: wrapper(async (userId, message, io = null) => {
-    const alert = new Alert({ userId, message });
-
+    const alert = new Alert({ userId, message ,createdAt:new Date()});
     if (io) {
       io.emit(`${userId}`, {
         id: alert._id,

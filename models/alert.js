@@ -8,7 +8,7 @@ const alertSchema = new mongoose.Schema({
     require: true,
   },
   read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now() },
+  createdAt: { type: Date, default: new Date() },
 });
 // function alertValidate(user) {
 //   const schema = joi.object({
