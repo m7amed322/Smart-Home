@@ -44,6 +44,22 @@ const AlertService = {
       throw new Error("no alerts for now");
     }
     return alerts;
+  }),
+  deleteAlerts:wrapper(async(userId)=>{
+    const alerts = await Alert.find({userId:userId});
+    if (!alerts) {
+      throw new Error("no alerts to delete");
+    }
+    await Alert.deleteMany({userId:userId});
+    return "Alerts deleted successfully"
+  }),
+  deleteById:wrapper(async(userId,alertId)=>{
+    const alert = await Alert.findOne({userId:userId,_id:alertId});
+    if(!alert){
+      throw new Error ("wrong alert id or no alert to delete")
+    }
+    await Alert.deleteOne({_id:alertId,userId:userId});
+    return "Alert deleted successfully"
   })
 };
 module.exports = AlertService;

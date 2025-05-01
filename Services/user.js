@@ -106,7 +106,7 @@ const userService = {
         if (predValue > 50) {
           alert = await AlertService.createAlert(
             user._id,
-            `from the device:${device.name} the predicted value after 6 hours:${predValue} `,
+            `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,
             io
           );
         }
@@ -157,7 +157,7 @@ const userService = {
   firstTimePassword: wrapper(async (userId, password) => {
     let user = await User.findOne({ _id: userId });
     if (!user) {
-      throw new Error("access denied"); // because to use this endpoin u must be authenticated so u are admin or user
+      throw new Error("access denied"); // because to use this endpoint u must be authenticated so u are admin or user
     }
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);

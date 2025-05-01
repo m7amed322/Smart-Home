@@ -25,4 +25,6 @@ router.post("/control", auth, userController.controlLed);
 router.post("/createDevice", auth, userController.createDevice);
 router.post("/createSeq", auth, userController.createSequence);
 router.delete("/device",auth,userController.deleteDevice);
+router.delete("/alerts",auth,userController.deleteAlerts);
+router.delete("/alert/:id",auth,userController.deleteAlertById)
 module.exports = router;

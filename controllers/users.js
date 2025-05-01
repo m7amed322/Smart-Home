@@ -271,6 +271,18 @@ module.exports = {
     res.json({
       alerts:alerts
     });
+  },
+  deleteAlerts:async(req,res,next)=>{
+    const message = await AlertService.deleteAlerts(req.tokenPayload.id);
+    res.json({
+      message:message
+    })
+  },
+  deleteAlertById:async(req,res,next)=>{
+    const message =await AlertService.deleteById(req.tokenPayload.id,req.params.id);
+    res.json({
+      message:message
+    })
   }
 };
 function validate(user) {
