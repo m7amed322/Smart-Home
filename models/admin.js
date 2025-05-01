@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const joi = require("joi");
 const complexity = require("joi-password-complexity");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const jwtPrivateKey = process.env.jwtPrivateKey;
 // require("dotenv").config();
 const adminSchema = new mongoose.Schema({
@@ -17,6 +18,9 @@ const adminSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: true },
   jwt: String,
   jwtExpires: Date,
+  passwordResetToken: String,
+  passwordResetTokenExpires: Date,
+  passwordChangeAt: Date,
 });
 adminSchema.methods.genToken = function () {
   token = jwt.sign(
@@ -26,23 +30,24 @@ adminSchema.methods.genToken = function () {
   this.jwtExpires = Date.now() + 60 * 1000 * 60 * 24 * 10;
   return token;
 };
-const Admin = mongoose.model("admin", adminSchema);
+adminSchema.methods.createResetToken = function () {
+  resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+  return resetToken;
+};
 
-function validateAdmin(admin, pass) {
+function validateAdmin(admin) {
   const schema = joi.object({
     email: joi.string().email().min(3).max(255).required(),
     password: joi.string().required(),
   });
-  const complexityOptions = {
-    min: 8,
-    max: 30,
-    lowerCase: 1,
-    upperCase: 1,
-    numeric: 1,
-    symbol: 1,
-  };
-  return schema.validate(admin), complexity(complexityOptions).validate(pass);
+  return schema.validate(admin);
 }
 
+const Admin = mongoose.model("admin", adminSchema);
 exports.Admin = Admin;
 exports.validateAdmin = validateAdmin;

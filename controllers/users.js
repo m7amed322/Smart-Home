@@ -19,6 +19,7 @@ module.exports = {
       req.body.email,
       req.body.password
     );
+    res.header("x-auth-token", token)
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
@@ -89,7 +90,7 @@ module.exports = {
   logout: async (req, res, next) => {
     const email = await userService.logout(req.tokenPayload.id);
     res.status(200).json({
-      message: `user: ${email} logged out`,
+      message: `user: ${email} is logged out`,
     });
   },
   controlLed: async (req, res, next) => {

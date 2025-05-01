@@ -9,6 +9,8 @@ const sendEmail = require("../Services/emaiil");
 const path = require("path");
 const { Support } = require("../models/support.js");
 const joi = require("joi");
+const adminService = require("../Services/admin.js");
+const { resetPassword } = require("./users.js");
 joi.objectId = require("joi-objectid")(joi);
 module.exports = {
   getRequest: async (req, res, next) => {
@@ -53,15 +55,15 @@ module.exports = {
           subject: `Credentials`,
           userEmail: user.email,
           userPassword: user.email,
-          to:user.email
+          to: user.email,
         },
         templatePath
       );
-      request.read=true;
-      await request.save()
+      request.read = true;
+      await request.save();
       await home.save();
       await user.save();
-      
+
       res.status(200).json({
         status: "successfully",
         message:
@@ -76,24 +78,20 @@ module.exports = {
   logIn: async (req, res, next) => {
     const { error } = validateAdmin(req.body);
     if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+      return next(error.details[0]);
     }
-    let admin = await Admin.findOne({ email: req.body.email });
-    if (!admin) {
-      res.status(400).json({ error: "invalid email or password" });
-      return;
-    }
-    const pass = await bcrypt.compare(req.body.password, admin.password);
-    if (!pass) {
-      res.status(400).json({ error: "invalid email or password" });
-      return;
-    }
-    const token = admin.genToken();
-    admin.jwt = crypto.createHash("sha256").update(token).digest("hex");
-    await admin.save();
+    const { admin, token } = await adminService.logIn(
+      req.body.email,
+      req.body.password
+    );
     res.header("x-auth-token", token);
     res.json({ admin: admin, message: "logged in successfully", token: token });
+  },
+  logout: async (req, res, next) => {
+    const email = await adminService.logout(req.tokenPayload.id);
+    res.status(200).json({
+      message: `admin: ${email} is logged out`,
+    });
   },
   getHomes: async (req, res, next) => {
     const home = await Home.find();
@@ -111,7 +109,7 @@ module.exports = {
     const { error } = joi
       .object({
         message: joi.string().min(3).max(255).required(),
-        supportId:joi.objectId().required(),
+        supportId: joi.objectId().required(),
       })
       .validate(req.body);
     if (error) {
@@ -126,11 +124,11 @@ module.exports = {
         {
           subject: `replying your support`,
           reply: req.body.message,
-          to:support.user.email,
+          to: support.user.email,
         },
         templatePath
       );
-      support.responsed=true;
+      support.responsed = true;
       await support.save();
       res.status(200).json({
         status: "successfully",
@@ -156,19 +154,42 @@ module.exports = {
     const request = await Request.findOne({ _id: req.params.id });
     res.json({ request: request });
   },
-  deleteUserAndHome:async(req,res,next)=>{
-    const user =await User.findByIdAndDelete(req.params.id);
-    const home = await Home.findOneAndDelete({userEmail:user.email})
-    const support = await Support.findOneAndDelete({"user._id":user._id});
-    const request = await Request.findOneAndDelete({email:user.email});
-    if(!user){
+  deleteUserAndHome: async (req, res, next) => {
+    const user = await User.findByIdAndDelete(req.params.id);
+    const home = await Home.findOneAndDelete({ userEmail: user.email });
+    const support = await Support.findOneAndDelete({ "user._id": user._id });
+    const request = await Request.findOneAndDelete({ email: user.email });
+    if (!user) {
       res.status(404).json("user not found");
       return;
     }
     res.status(200).json({
-      message:`user: ${user.email} and his home is deleted`
-    })
-  }
+      message: `user: ${user.email} and his home is deleted`,
+    });
+  },
+  forgotPassword: async (req, res, next) => {
+    const { error } = joi
+      .object({ email: joi.string().email().min(3).max(255).required() })
+      .validate(req.body);
+    if (error) {
+      return next(error.details[0]);
+    }
+    const resetUrl = await adminService.forgotPassword(req.body.email);
+    res.json({
+      status: "successfully",
+      message: "password reset link sent to the admin email",
+      resetUrl: resetUrl,
+    });
+  },
+  resetPassword:async(req,res,next)=>{
+    const password = await adminService.resetPassword(
+      req.params.token,
+      req.body.password
+    );
+    res
+      .status(200)
+      .json({ message: "password changed successfully", password: password });
+  },
   // createAdmin:async (req,res)=>{
   //   const {error} = validateAdmin(req.body)
   //   if(error){

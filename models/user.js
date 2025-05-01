@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
   passwordResetToken: String,
   passwordResetTokenExpires: Date,
   passwordChangeAt: Date,
-  isActive: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
   jwt: String,
   jwtExpires: Date,
   userProfilePic: String,
