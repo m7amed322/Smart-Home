@@ -18,7 +18,7 @@ module.exports = function (app, io) {
     req.io = io;
     next();
   });
-  app.use("/api/sendRequests", requests);
+  app.use("/api", requests);
   app.use("/api/admin", admin);
   app.use("/api/users", users);
   app.use(error);
