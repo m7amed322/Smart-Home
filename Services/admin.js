@@ -218,7 +218,7 @@ const adminService = {
   },
   createAcc: wrapper(async (requestId) => {
     const request = await Request.findOne({ _id: requestId });
-    const home = await Home.findOne({ userEmail:request });
+    const home = await Home.findOne({ userEmail:request.email });
     if (!request || !home) {
       throw new Error("request or home not found");
     }
