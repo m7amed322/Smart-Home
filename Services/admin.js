@@ -122,6 +122,8 @@ const adminService = {
       return this.createRoom(roomName, home._id, req.ledNumber[index]);
     });
     await Promise.all(roomPromises);
+    request.homeCreated=true;
+    await request.save()
     return home;
   },
   async createDevice(Name, homeId) {
@@ -243,7 +245,7 @@ const adminService = {
         },
         templatePath
       );
-      request.read = true;
+      request.accCreated = true;
       await request.save();
       await user.save();
       return user;
