@@ -216,9 +216,9 @@ const adminService = {
       throw err;
     }
   },
-  createAcc: wrapper(async (requestId, homeId) => {
+  createAcc: wrapper(async (requestId) => {
     const request = await Request.findOne({ _id: requestId });
-    const home = await Home.findOne({ _id: homeId });
+    const home = await Home.findOne({ userEmail:request });
     if (!request || !home) {
       throw new Error("request or home not found");
     }

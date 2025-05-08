@@ -146,15 +146,13 @@ module.exports = {
     const { error } = joi
       .object({
         requestId: joi.objectId().required(),
-        homeId: joi.objectId().required(),
       })
       .validate(req.body);
     if (error) {
       return next(error.details[0]);
     }
     const user = await adminService.createAcc(
-      req.body.requestId,
-      req.body.homeId
+      req.body.requestId
     );
     res.json({ user, "user email": user.email, "user password": user.email });
   },
