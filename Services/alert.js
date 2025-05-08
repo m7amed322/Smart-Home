@@ -30,13 +30,13 @@ const AlertService = {
     await alert.save();
     return alert;
   }),
-  markAsRead:wrapper(async(userId)=>{
-    const alert = await Alert.findOne({ userId:userId,read:false });
-    if (!alert) {
+  markAllAsRead:wrapper(async(userId)=>{
+    const alert = await Alert.find({ userId:userId,read:false });
+    if (alert.length==0) {
       throw new Error("no alerts not readed");
     }
     await Alert.updateMany({userId:userId,read:false},{$set:{read:true}});
-    return "all alerts is readed"
+    return "all alerts is read"
   }),
   getAlerts:wrapper(async(userId)=>{
     const alerts = await Alert.find({userId:userId});
@@ -60,6 +60,14 @@ const AlertService = {
     }
     await Alert.deleteOne({_id:alertId,userId:userId});
     return "Alert deleted successfully"
+  }),
+  markAsRead:wrapper(async(userId,alertId)=>{
+    const alert = await Alert.findOne({ userId:userId,read:false,_id:alertId });
+    if (!alert) {
+      throw new Error("alert not found or it is already read");
+    }
+    await Alert.updateOne({userId:userId,_id:alertId,read:false},{$set:{read:true}});
+    return "this alerts is read"
   })
 };
 module.exports = AlertService;

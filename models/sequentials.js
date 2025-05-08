@@ -24,8 +24,14 @@ const sequentialSchema = new mongoose.Schema({
     default: null,
   },
   appliance: { type: String, required: true },
-  home_id: { type: String,required:true},
-  device_id:{type:String,required:true}
+  home_id: { type: String, required: true },
+  device_id: { type: String, required: true },
+  roomName: {
+    type: String,
+    enum: {
+      values: ["bedroom", "guestroom", "dinningroom", "livingroom", "corridor"],
+    },
+  },
 });
 const Sequential = mongoose.model("sequential", sequentialSchema);
 exports.Sequential = Sequential;

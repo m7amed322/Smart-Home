@@ -11,23 +11,19 @@ const roomSchema = new mongoose.Schema({
       values: ["bedroom", "guestroom", "dinningroom", "livingroom", "corridor"],
     },
   },
-  led: {
-    number: {
-      type: Number,
-      min: 1,
-      max: 3,
-      required: true,
-    },
-    seqs: {
-      type: [sequentialSchema],
-      validate: {
-        validator: function (array) {
-          return array.length === 12;
+  led: [
+    {
+      type: new mongoose.Schema({
+        name: {
+          type: String,
+          required: true,
         },
-      },
+        seqs: [sequentialSchema],
+        preds: predictionSchema,
+      }),
     },
-    preds: predictionSchema,
-  },
+  ],
+  homeId: { type: String, required: true },
 });
 const Room = mongoose.model("room", roomSchema);
 exports.Room = Room;

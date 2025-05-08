@@ -1,12 +1,8 @@
 const mqttService = require("../Services/mqtt.js");
 const joi = require("joi");
-const { Device } = require("../models/devices.js");
 const predict = require("../utils/consumptionPrediction.js");
-const { Prediction } = require("../models/predictions.js");
-const _ = require("lodash");
 const userService = require("../Services/user.js");
-const { Home } = require("../models/home.js");
-const { Sequential } = require("../models/sequentials.js");
+const { supportValidate } = require("../models/support.js");
 const AlertService = require("../Services/alert.js");
 module.exports = {
   logIn: async (req, res, next) => {
@@ -19,7 +15,7 @@ module.exports = {
       req.body.email,
       req.body.password
     );
-    res.header("x-auth-token", token)
+    res.header("x-auth-token", token);
     res.json({ user: user, message: "logged in successfully", token: token });
   },
   getHome: async (req, res, next) => {
@@ -120,133 +116,61 @@ module.exports = {
         temp: joi.number().min(2).max(50).required(),
         occuped: joi.string().required(),
         deviceName: joi.string().min(3).max(255).required(),
+        roomName: joi.string().min(3).max(255),
       })
       .validate(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const { seq, device } = await userService.createSequence(
+    const result = await userService.createSequence(
       req.tokenPayload.homeId,
       req.body
     );
-
-    const { prediction, alert } = await userService.handlePrediction(
-      device,
-      predict,
-      req.io
-    );
-
-    res.status(200).json({
-      message: "Successfully created sequence",
-      sequence: seq,
-      pred: prediction,
-      alert: alert,
-    });
-  },
-  createDevice: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        name: joi.string().min(3).max(255).required(),
-      })
-      .validate(req.body);
-    if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+    if (!result || (!result.device && !result.room)) {
+      return res.status(400).json({ error: "Invalid sequence data" });
     }
-    try {
-      let name = "";
-      const sameNameDevices = await Device.find({
-        name: new RegExp(`^${req.body.name}.?$`, "i"),
-        homeId: req.tokenPayload.homeId,
-      });
-      if (sameNameDevices.length == 0) {
-        name = req.body.name;
-      } else if (sameNameDevices.length == 1) {
-        await Device.updateOne(
-          { _id: sameNameDevices[0]._id },
-          { $set: { name: req.body.name + 1 } }
-        );
-        const firstPred = await Prediction.find({
-          "device.homeId": req.tokenPayload.homeId,
-          "device.name": req.body.name,
-        });
-        await Prediction.updateOne(
-          { _id: firstPred[0]._id },
-          { $set: { "device.name": req.body.name + 1 } }
-        );
-        name = req.body.name + 2;
-      } else {
-        const deviceNumber = parseInt(
-          sameNameDevices[sameNameDevices.length - 1].name[
-            sameNameDevices[sameNameDevices.length - 1].name.length - 1
-          ]
-        );
-        name = req.body.name + (deviceNumber + 1);
-      }
-      const device = new Device({
-        name: name,
-        homeId: req.tokenPayload.homeId,
-      });
-      const pred = new Prediction({
-        "device.name": device.name,
-        "device.homeId": device.homeId,
-        "device.id": device._id,
-      });
-      await device.save();
-      await pred.save();
-      const home = await Home.findOne({ _id: req.tokenPayload.homeId });
-      home.devices = await Device.find({ homeId: req.tokenPayload.homeId });
-      await home.save();
-      res.json({
-        message: "successfully device created",
-      });
-    } catch (err) {
-      next(err);
+    const { seq, room, device, indexOfLed } = result;
+    if (room && indexOfLed === undefined) {
+      return res.status(400).json({ error: "indexOfLed is undefined" });
     }
-  },
-  deleteDevice: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        deviceId: joi.string().min(3).max(255).required(),
-      })
-      .validate(req.body);
-    if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
-    }
-    try {
-      const home = await Home.findOne({
-        _id: req.tokenPayload.homeId,
-        "devices._id": req.body.deviceId,
-      });
-      if (!home) {
-        res.status(400).json("device was not found in your home");
-        return;
-      }
-      await Device.findByIdAndDelete(req.body.deviceId);
-      const devicesOfHome = _.filter(home.devices, (obj) => {
-        return obj._id != req.body.deviceId;
-      });
-      home.devices = devicesOfHome;
-
-      await home.save();
-
-      await Prediction.findOneAndDelete({
-        "device.id": req.body.deviceId,
-        "device.homeId": req.tokenPayload.homeId,
-      });
-
-      await Sequential.deleteMany({
-        device_id: req.body.deviceId,
-        home_id: req.tokenPayload.homeId,
-      });
-
-      res.json(
-        "device deleted successfully with its prediction , sequences and from this home's devices also"
+    if (device) {
+      const { prediction, alert } = await userService.handlePrediction(
+        predict,
+        req.io,
+        null,
+        null,
+        device
       );
-    } catch (err) {
-      next(err);
+      res.status(200).json({
+        message: "Successfully created sequence",
+        sequence: seq,
+        pred: prediction,
+        alert: alert,
+      });
+      return;
+    }
+    if (room) {
+      const predictionResult = await userService.handlePrediction(
+        predict,
+        req.io,
+        indexOfLed,
+        room,
+        null
+      );
+      if (!predictionResult) {
+        return res
+          .status(500)
+          .json({ error: "handlePrediction returned undefined" });
+      }
+      const { prediction, alert } = predictionResult;
+      res.status(200).json({
+        message: "Successfully created sequence",
+        sequence: seq,
+        pred: prediction,
+        alert: alert,
+      });
+      return;
     }
   },
   unreadAlerts: async (req, res, next) => {
@@ -262,29 +186,40 @@ module.exports = {
     });
   },
   markAllAsRead: async (req, res, next) => {
-    const message = await AlertService.markAsRead(req.tokenPayload.id);
+    const message = await AlertService.markAllAsRead(req.tokenPayload.id);
     res.json({
       message: message,
     });
   },
-  getAlerts:async(req,res,next)=>{
-    const alerts =await AlertService.getAlerts(req.tokenPayload.id);
+
+  getAlerts: async (req, res, next) => {
+    const alerts = await AlertService.getAlerts(req.tokenPayload.id);
     res.json({
-      alerts:alerts
+      alerts: alerts,
     });
   },
-  deleteAlerts:async(req,res,next)=>{
+  deleteAlerts: async (req, res, next) => {
     const message = await AlertService.deleteAlerts(req.tokenPayload.id);
     res.json({
-      message:message
-    })
+      message: message,
+    });
   },
-  deleteAlertById:async(req,res,next)=>{
-    const message =await AlertService.deleteById(req.tokenPayload.id,req.params.id);
+  deleteAlertById: async (req, res, next) => {
+    const message = await AlertService.deleteById(
+      req.tokenPayload.id,
+      req.params.id
+    );
     res.json({
-      message:message
-    })
-  }
+      message: message,
+    });
+  },
+  markAsRead: async (req, res, next) => {
+    const message = await AlertService.markAsRead(
+      req.tokenPayload.id,
+      req.params.id
+    );
+    res.json({ message });
+  },
 };
 function validate(user) {
   const schema = joi.object({

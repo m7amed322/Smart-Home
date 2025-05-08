@@ -1,3 +1,4 @@
+const { string } = require("joi");
 const mongoose = require("mongoose");
 const predictionSchema = new mongoose.Schema({
   after_1hour: { type: Number, required: true, default: 0 },
@@ -14,6 +15,12 @@ const predictionSchema = new mongoose.Schema({
     }),
     required: true,
   },
+  roomName:{
+    type:String,
+    enum: {
+      values: ["bedroom", "guestroom", "dinningroom", "livingroom", "corridor"],
+    }
+  }
 });
 
 const Prediction = mongoose.model("prediction", predictionSchema);

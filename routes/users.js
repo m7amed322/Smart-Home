@@ -19,12 +19,11 @@ router.get("/alert/Unread",auth,userController.unreadAlerts);
 router.get("/alert/:id",auth,userController.alertById);
 router.get("/alerts",auth,userController.getAlerts);
 router.put("/alert/markAllAsRead",auth,userController.markAllAsRead);
+router.put("/alert/markAsRead/:id",auth,userController.markAsRead);
 router.post("/support", auth, userController.support);
 router.post("/logout", auth, userController.logout);
 router.post("/control", auth, userController.controlLed);
-router.post("/createDevice", auth, userController.createDevice);
 router.post("/createSeq", auth, userController.createSequence);
-router.delete("/device",auth,userController.deleteDevice);
 router.delete("/alerts",auth,userController.deleteAlerts);
 router.delete("/alert/:id",auth,userController.deleteAlertById)
 module.exports = router;

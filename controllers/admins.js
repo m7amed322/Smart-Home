@@ -14,66 +14,8 @@ const { resetPassword } = require("./users.js");
 joi.objectId = require("joi-objectid")(joi);
 module.exports = {
   getRequest: async (req, res, next) => {
-    const request = await Request.find();
-    if (request.length === 0) {
-      res.status(404).json({ error: "no requests founded" });
-      return;
-    }
-    res.json(request);
-  },
-  createHomeAndAcc: async (req, res, next) => {
-    const { error } = req.body;
-    if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
-    }
-    const request = await Request.findById(req.body.requestId);
-    if (!request) {
-      res.status(404).json({ error: "wrong request ID" });
-      return;
-    }
-    const home = new Home({
-      address: request.homeAddress,
-      userEmail: request.email,
-      householdSize: req.body.householdSize,
-      userFullName: request.fullName,
-    });
-    let user = new User({
-      fullName: request.fullName,
-      email: request.email,
-      password: request.email,
-      home: _.pick(home, ["address", "householdSize", "_id"]),
-      userProfilePic: request.profilePic,
-      phoneNumber: request.phoneNumber,
-    });
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
-    try {
-      const templatePath = path.join(__dirname, "../Pages/userInfo.html");
-      await sendEmail(
-        {
-          subject: `Credentials`,
-          userEmail: user.email,
-          userPassword: user.email,
-          to: user.email,
-        },
-        templatePath
-      );
-      request.read = true;
-      await request.save();
-      await home.save();
-      await user.save();
-
-      res.status(200).json({
-        status: "successfully",
-        message:
-          "the credentials mail sent to the user email ,home & user acc created successfully",
-        userEmail: user.email,
-        userPassword: user.email,
-      });
-    } catch (err) {
-      return next(err);
-    }
+    const requests = await adminService.getRequest();
+    res.json(requests);
   },
   logIn: async (req, res, next) => {
     const { error } = validateAdmin(req.body);
@@ -93,16 +35,16 @@ module.exports = {
       message: `admin: ${email} is logged out`,
     });
   },
-  getHomes: async (req, res, next) => {
-    const home = await Home.find();
+  getHome: async (req, res, next) => {
+    const home = await adminService.getHomes();
     res.json({ homes: home });
   },
   getSupport: async (req, res, next) => {
-    const support = await Support.find();
+    const support = await adminService.getSupports();
     res.json({ supports: support });
   },
-  getUsers: async (req, res, next) => {
-    const user = await User.find();
+  getUser: async (req, res, next) => {
+    const user = await adminService.getUsers();
     res.json({ users: user });
   },
   replySupport: async (req, res, next) => {
@@ -116,56 +58,27 @@ module.exports = {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const support = await Support.findOne({ _id: req.body.supportId });
-
-    try {
-      const templatePath = path.join(__dirname, "../Pages/supportEmail.html");
-      await sendEmail(
-        {
-          subject: `replying your support`,
-          reply: req.body.message,
-          to: support.user.email,
-        },
-        templatePath
-      );
-      support.responsed = true;
-      await support.save();
-      res.status(200).json({
-        status: "successfully",
-        message: "email sent with reply",
-      });
-    } catch (err) {
-      return next(err);
-    }
+    const support = await adminService.replySupport(req.body.message,req.body.supportId);
+    res.json({
+      message:"reply is sent to the user email",
+      support:support
+    })
   },
-  getHomesById: async (req, res, next) => {
-    const home = await Home.findOne({ _id: req.params.id });
+  getHomeById: async (req, res, next) => {
+    const home = await adminService.getHomeById(req.params.id);
     res.json({ home: home });
   },
   getSupportById: async (req, res, next) => {
-    const support = await Support.findOne({ _id: req.params.id });
+    const support = await adminService.getSupportById(req.params.id);
     res.json({ support: support });
   },
-  getUsersById: async (req, res, next) => {
-    const user = await User.findOne({ _id: req.params.id });
+  getUserById: async (req, res, next) => {
+    const user = await adminService.getUserById(req.params.id);
     res.json({ user: user });
   },
   getRequestById: async (req, res, next) => {
-    const request = await Request.findOne({ _id: req.params.id });
+    const request = await adminService.getRequestById(req.params.id);
     res.json({ request: request });
-  },
-  deleteUserAndHome: async (req, res, next) => {
-    const user = await User.findByIdAndDelete(req.params.id);
-    const home = await Home.findOneAndDelete({ userEmail: user.email });
-    const support = await Support.findOneAndDelete({ "user._id": user._id });
-    const request = await Request.findOneAndDelete({ email: user.email });
-    if (!user) {
-      res.status(404).json("user not found");
-      return;
-    }
-    res.status(200).json({
-      message: `user: ${user.email} and his home is deleted`,
-    });
   },
   forgotPassword: async (req, res, next) => {
     const { error } = joi
@@ -181,7 +94,7 @@ module.exports = {
       resetUrl: resetUrl,
     });
   },
-  resetPassword:async(req,res,next)=>{
+  resetPassword: async (req, res, next) => {
     const password = await adminService.resetPassword(
       req.params.token,
       req.body.password
@@ -190,6 +103,62 @@ module.exports = {
       .status(200)
       .json({ message: "password changed successfully", password: password });
   },
+  getMe: async (req, res, next) => {
+    const admin = await adminService.getMe(req.tokenPayload.id);
+    res.json({
+      admin: admin,
+    });
+  },
+  createHome: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        requestId: joi.objectId().required(),
+        ledNumber: joi.array().required(),
+        rooms: joi.array().required(),
+        devices: joi.array().required(),
+        householdSize: joi.number().required(),
+      })
+      .validate(req.body);
+    if (error) {
+      return next(error.details[0]);
+    }
+    if (req.body.rooms.length != req.body.ledNumber.length) {
+      return next("there's a room or a leds number missing");
+    }
+    try {
+      const home = await adminService.createHome(req.body);
+      res.json({
+        home: {
+          id: home._id,
+          address: home.address,
+          userFullName: home.userFullName,
+          userEmail: home.userEmail,
+          householdSize: home.householdSize,
+          devices: home.devices,
+          rooms: home.rooms,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+  createAcc: async (req, res, next) => {
+    const { error } = joi
+      .object({
+        requestId: joi.objectId().required(),
+        homeId: joi.objectId().required(),
+      })
+      .validate(req.body);
+    if (error) {
+      return next(error.details[0]);
+    }
+    const user = await adminService.createAcc(
+      req.body.requestId,
+      req.body.homeId
+    );
+    res.json({ user, "user email": user.email, "user password": user.email });
+  },
+
   // createAdmin:async (req,res)=>{
   //   const {error} = validateAdmin(req.body)
   //   if(error){
