@@ -4,6 +4,7 @@ const passport = require("passport");
 const passportConfig = require("../passport");
 const auth = require("../middleware/auth");
 const userController = require("../controllers/users");
+const upload = require("../middleware/upload");
 router.post("/login", userController.logIn);
 router.get("/home", auth, userController.getHome);
 // router.post(
@@ -25,5 +26,6 @@ router.post("/logout", auth, userController.logout);
 router.post("/control", auth, userController.controlLed);
 router.post("/createSeq", auth, userController.createSequence);
 router.delete("/alerts",auth,userController.deleteAlerts);
-router.delete("/alert/:id",auth,userController.deleteAlertById)
+router.delete("/alert/:id",auth,userController.deleteAlertById);
+router.patch("/me",auth,upload.single('profilePic'),userController.updateMe)
 module.exports = router;

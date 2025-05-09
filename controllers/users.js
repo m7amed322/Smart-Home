@@ -8,8 +8,7 @@ module.exports = {
   logIn: async (req, res, next) => {
     const { error } = accountValidation.acc(req.body);
     if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+      return next(error.details[0]);
     }
     const { user, token } = await userService.logIn(
       req.body.email,
@@ -46,8 +45,7 @@ module.exports = {
   forgotPassword: async (req, res, next) => {
     const { error } = accountValidation.email(req.body);
     if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+      return next(error.details[0]);
     }
     const resetUrl = await userService.forgotPassword(req.body.email);
     res.json({
@@ -68,8 +66,7 @@ module.exports = {
   support: async (req, res, next) => {
     const { error } = userValidation.message(req.body);
     if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+      return next(error.details[0]);
     }
     const { user, support } = await userService.support(
       req.body.message,
@@ -108,10 +105,9 @@ module.exports = {
     });
   },
   createSequence: async (req, res, next) => {
-    const { error } =userValidation.sequence(req.body);
+    const { error } = userValidation.sequence(req.body);
     if (error) {
-      res.status(400).json(error.details[0].message);
-      return;
+      return next(error.details[0]);
     }
     const result = await userService.createSequence(
       req.tokenPayload.homeId,
@@ -210,4 +206,22 @@ module.exports = {
     );
     res.json({ message });
   },
-}
+  updateMe: async (req, res, next) => {
+    const { error } = userValidation.update(req.body);
+    if (error) {
+      return next(error.details[0]);
+    }
+    const user = await userService.updateMe(
+      req.tokenPayload.id,
+      req.body.fullName,
+      req.body.email,
+      req.file,
+      req.body.currentPass,
+      req.body.newPass
+    );
+    res.json({
+      user,
+      message: "user updated successfully",
+    });
+  },
+};

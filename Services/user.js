@@ -6,7 +6,7 @@ const AlertService = require("./alert");
 const { User } = require("../models/user");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const Home  = require("../models/home");
+const Home = require("../models/home");
 const { wrapper } = require("../utils/helper");
 const path = require("path");
 const sendEmail = require("./emaiil");
@@ -239,7 +239,7 @@ const userService = {
             }
           );
           room.led[indexOfLed].preds = prediction;
-          await room.save()
+          await room.save();
           const user = await User.findOne({ "home._id": room.homeId });
           let alert;
           if (predValue > 50) {
@@ -288,7 +288,10 @@ const userService = {
             "device.id": device._id,
           });
           await device.save();
-          await Home.updateOne({_id:device.homeId,"devices._id":device._id},{$set:{"devices.$.preds":prediction}});
+          await Home.updateOne(
+            { _id: device.homeId, "devices._id": device._id },
+            { $set: { "devices.$.preds": prediction } }
+          );
           const user = await User.findOne({ "home._id": device.homeId });
           let alert;
           if (predValue > 50) {
@@ -428,5 +431,44 @@ const userService = {
     await user.save();
     return user.email;
   }),
+  updateMe: wrapper(
+    async (userId, fullName, email, userProfilePic, currentPass, newPass) => {
+      let user = await User.findOne({ _id: userId });
+      if (!user) {
+        throw new Error("user not found");
+      }
+      if (newPass) {
+        if (!currentPass) {
+          throw new Error("current password is required");
+        }
+        const pass = await bcrypt.compare(currentPass, user.password);
+        if (!pass) {
+          throw new Error("invalid password");
+        }
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPass, salt);
+      }
+      if (userProfilePic) {
+        user.userProfilePic =
+          "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
+          userProfilePic.path.replace("uploads\\", "");
+      }
+
+      await Promise.all([
+        User.updateOne(
+          { _id: userId },
+          {
+            $set: {
+              fullName: fullName || user.fullName,
+              email: email || user.email,
+            },
+          }
+        ),
+        user.save(),
+      ]);
+      user = await User.findOne({ _id: userId });
+      return user;
+    }
+  ),
 };
 module.exports = userService;

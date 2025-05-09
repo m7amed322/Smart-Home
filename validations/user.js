@@ -26,5 +26,14 @@ const userValidation = {
     });
     return schema.validate(request);
   },
+  update:(userData)=>{
+    const schema = joi.object({
+      fullName: joi.string().min(3).max(255),
+      email: joi.string().email().min(3).max(255),
+      currentPass:joi.string().min(3).max(255),
+      newPass:joi.string().min(3).max(255)
+    });
+    return schema.validate(userData);
+  }
 };
 module.exports = userValidation;
