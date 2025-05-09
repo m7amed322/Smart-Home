@@ -44,7 +44,7 @@ const adminService = {
     }
     resetToken = admin.createResetToken();
     await admin.save();
-    const resetUrl = `http://localhost:5173/reset-pass/${resetToken}`;
+    const resetUrl = `localhost:5173/reset-password-admin/${resetToken}`;
     try {
       const templatePath = path.join(__dirname, "../Pages//resetPassword.html");
       await sendEmail(
