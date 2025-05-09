@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/user");
-const { Admin } = require("../models/admin");
+const Admin = require("../models/admin");
 // require("dotenv").config();
 const crypto = require("crypto");
 const { error } = require("console");
