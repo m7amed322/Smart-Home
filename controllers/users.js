@@ -1,12 +1,12 @@
 const mqttService = require("../Services/mqtt.js");
-const joi = require("joi");
 const predict = require("../utils/consumptionPrediction.js");
 const userService = require("../Services/user.js");
-const { supportValidate } = require("../models/support.js");
+const accountValidation = require("../validations/account.js");
+const userValidation = require("../validations/user.js");
 const AlertService = require("../Services/alert.js");
 module.exports = {
   logIn: async (req, res, next) => {
-    const { error } = validate(req.body);
+    const { error } = accountValidation.acc(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
@@ -44,9 +44,7 @@ module.exports = {
     });
   },
   forgotPassword: async (req, res, next) => {
-    const { error } = joi
-      .object({ email: joi.string().email().min(3).max(255).required() })
-      .validate(req.body);
+    const { error } = accountValidation.email(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
@@ -68,7 +66,7 @@ module.exports = {
       .json({ message: "password changed successfully", password: password });
   },
   support: async (req, res, next) => {
-    const { error } = supportValidate(req.body);
+    const { error } = userValidation.message(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
@@ -110,15 +108,7 @@ module.exports = {
     });
   },
   createSequence: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        durationInMin: joi.number().min(1).max(60).required(),
-        temp: joi.number().min(2).max(50).required(),
-        occuped: joi.string().required(),
-        deviceName: joi.string().min(3).max(255).required(),
-        roomName: joi.string().min(3).max(255),
-      })
-      .validate(req.body);
+    const { error } =userValidation.sequence(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
@@ -220,11 +210,4 @@ module.exports = {
     );
     res.json({ message });
   },
-};
-function validate(user) {
-  const schema = joi.object({
-    email: joi.string().email().min(3).max(255).required(),
-    password: joi.string().required(),
-  });
-  return schema.validate(user);
 }

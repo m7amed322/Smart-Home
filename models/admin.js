@@ -1,10 +1,7 @@
 const mongoose = require("mongoose");
-const joi = require("joi");
-const complexity = require("joi-password-complexity");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const jwtPrivateKey = process.env.jwtPrivateKey;
-// require("dotenv").config();
 const adminSchema = new mongoose.Schema({
   fullName: { type: String, minlength: 3, maxlength: 255, required: true },
   email: {
@@ -39,15 +36,5 @@ adminSchema.methods.createResetToken = function () {
   this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
-
-function validateAdmin(admin) {
-  const schema = joi.object({
-    email: joi.string().email().min(3).max(255).required(),
-    password: joi.string().required(),
-  });
-  return schema.validate(admin);
-}
-
 const Admin = mongoose.model("admin", adminSchema);
-exports.Admin = Admin;
-exports.validateAdmin = validateAdmin;
+module.exports = Admin;

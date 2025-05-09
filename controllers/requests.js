@@ -1,9 +1,10 @@
-const { Request, validate } = require("../models/request");
+const Request = require("../models/request");
 const path = require("path");
 const sendEmail = require("../Services/emaiil");
+const userValidation = require("../validations/user");
 module.exports = {
   createRequest: async (req, res, next) => {
-    const { error } = validate(req.body);
+    const { error } = userValidation.request(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;

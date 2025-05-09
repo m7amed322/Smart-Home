@@ -1,18 +1,15 @@
 const _ = require("lodash");
-const { Sequential } = require("../models/sequentials");
 const { Device } = require("../models/devices");
 const { Prediction } = require("../models/predictions");
-const AlertService = require("./alert");
-const { Admin } = require("../models/admin");
+const Admin = require("../models/admin");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const { Home } = require("../models/home");
+const Home  = require("../models/home");
 const { wrapper } = require("../utils/helper");
 const path = require("path");
 const sendEmail = require("./emaiil");
-const { Support } = require("../models/support");
-const { Request } = require("../models/request");
-const { getRequestById } = require("../controllers/admins");
+const Support  = require("../models/support");
+const Request  = require("../models/request");
 const { Room } = require("../models/rooms");
 const { User } = require("../models/user");
 const adminService = {
@@ -122,8 +119,8 @@ const adminService = {
       return this.createRoom(roomName, home._id, req.ledNumber[index]);
     });
     await Promise.all(roomPromises);
-    request.homeCreated=true;
-    await request.save()
+    request.homeCreated = true;
+    await request.save();
     return home;
   },
   async createDevice(Name, homeId) {
@@ -220,7 +217,7 @@ const adminService = {
   },
   createAcc: wrapper(async (requestId) => {
     const request = await Request.findOne({ _id: requestId });
-    const home = await Home.findOne({ userEmail:request.email });
+    const home = await Home.findOne({ userEmail: request.email });
     if (!request || !home) {
       throw new Error("request or home not found");
     }

@@ -1,24 +1,13 @@
-const bcrypt = require("bcrypt");
-const { Request } = require("../models/request");
-const { Home, validate } = require("../models/home");
-const { User } = require("../models/user");
-const { Admin, validateAdmin } = require("../models/admin");
-const crypto = require("crypto");
-const _ = require("lodash");
-const sendEmail = require("../Services/emaiil");
-const path = require("path");
-const { Support } = require("../models/support.js");
-const joi = require("joi");
+const adminValidation = require("../validations/admin.js");
+const accountValidation = require("../validations/account.js");
 const adminService = require("../Services/admin.js");
-const { resetPassword } = require("./users.js");
-joi.objectId = require("joi-objectid")(joi);
 module.exports = {
   getRequest: async (req, res, next) => {
     const requests = await adminService.getRequest();
     res.json(requests);
   },
   logIn: async (req, res, next) => {
-    const { error } = validateAdmin(req.body);
+    const { error } = accountValidation.acc(req.body);
     if (error) {
       return next(error.details[0]);
     }
@@ -48,21 +37,19 @@ module.exports = {
     res.json({ users: user });
   },
   replySupport: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        message: joi.string().min(3).max(255).required(),
-        supportId: joi.objectId().required(),
-      })
-      .validate(req.body);
+    const { error } = adminValidation.support(req.body);
     if (error) {
       res.status(400).json(error.details[0].message);
       return;
     }
-    const support = await adminService.replySupport(req.body.message,req.body.supportId);
+    const support = await adminService.replySupport(
+      req.body.message,
+      req.body.supportId
+    );
     res.json({
-      message:"reply is sent to the user email",
-      support:support
-    })
+      message: "reply is sent to the user email",
+      support: support,
+    });
   },
   getHomeById: async (req, res, next) => {
     const home = await adminService.getHomeById(req.params.id);
@@ -81,9 +68,7 @@ module.exports = {
     res.json({ request: request });
   },
   forgotPassword: async (req, res, next) => {
-    const { error } = joi
-      .object({ email: joi.string().email().min(3).max(255).required() })
-      .validate(req.body);
+    const { error } = accountValidation.email(req.body);
     if (error) {
       return next(error.details[0]);
     }
@@ -110,15 +95,7 @@ module.exports = {
     });
   },
   createHome: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        requestId: joi.objectId().required(),
-        ledNumber: joi.array().required(),
-        rooms: joi.array().required(),
-        devices: joi.array().required(),
-        householdSize: joi.number().required(),
-      })
-      .validate(req.body);
+    const { error } = adminValidation.home(req.body);
     if (error) {
       return next(error.details[0]);
     }
@@ -127,33 +104,17 @@ module.exports = {
     }
     try {
       const home = await adminService.createHome(req.body);
-      res.json({
-        home: {
-          id: home._id,
-          address: home.address,
-          userFullName: home.userFullName,
-          userEmail: home.userEmail,
-          householdSize: home.householdSize,
-          devices: home.devices,
-          rooms: home.rooms,
-        },
-      });
+      res.json({ home });
     } catch (err) {
       next(err);
     }
   },
   createAcc: async (req, res, next) => {
-    const { error } = joi
-      .object({
-        requestId: joi.objectId().required(),
-      })
-      .validate(req.body);
+    const { error } = adminValidation.request(req.body);
     if (error) {
       return next(error.details[0]);
     }
-    const user = await adminService.createAcc(
-      req.body.requestId
-    );
+    const user = await adminService.createAcc(req.body.requestId);
     res.json({ user, "user email": user.email, "user password": user.email });
   },
 
