@@ -319,6 +319,7 @@ const adminService = {
         {
           subject: `replying your support`,
           reply: message,
+          fullName:support.user.fullName,
           to: support.user.email,
         },
         templatePath

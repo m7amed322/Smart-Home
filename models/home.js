@@ -10,7 +10,10 @@ const homeSchema = new mongoose.Schema({
   householdSize: { type: Number, min: 0, max: 10, required: true },
   devices:{type:[deviceSchema],required:true},
   rooms:{type:[roomSchema],required:true},
-  temp:{type:Number}
+  temp:{type:Number},
+  totalEnergyConsumption: { type: Number },
+  totalEnergyConsumptionDate: { type: Date },
 });
+
 const Home = mongoose.model("home", homeSchema);
 module.exports = Home;
