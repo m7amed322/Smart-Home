@@ -12,6 +12,7 @@ const path = require("path");
 const sendEmail = require("./emaiil");
 const Support = require("../models/support");
 const { Room } = require("../models/rooms");
+const Request = require("../models/request");
 const userService = {
   createSequence: async (homeId, seqData) => {
     if (new RegExp("^Lighting.?$", "i").test(seqData.deviceName)) {
@@ -400,7 +401,7 @@ const userService = {
     user.password = await bcrypt.hash(password, salt);
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpires = undefined;
-    user.passwordChangeAt = Date.now();
+    user.passwordChangeAt = new Date();
     await user.save();
     return password;
   }),
@@ -432,8 +433,17 @@ const userService = {
     return user.email;
   }),
   updateMe: wrapper(
-    async (userId, fullName, email, userProfilePic, currentPass, newPass) => {
+    async (
+      userId,
+      fullName,
+      email,
+      phoneNumber,
+      userProfilePic,
+      currentPass,
+      newPass
+    ) => {
       let user = await User.findOne({ _id: userId });
+      const oldEmail = user.email;
       if (!user) {
         throw new Error("user not found");
       }
@@ -446,7 +456,10 @@ const userService = {
           throw new Error("invalid password");
         }
         const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPass, salt);
+        let password = await bcrypt.hash(newPass, salt);
+        user.password = password;
+        user.passwordChangeAt = new Date();
+        user.isActive=true;
       }
       if (userProfilePic) {
         user.userProfilePic =
@@ -461,12 +474,29 @@ const userService = {
             $set: {
               fullName: fullName || user.fullName,
               email: email || user.email,
+              phoneNumber: phoneNumber || user.phoneNumber,
+            },
+          }
+        ),
+        Home.updateOne(
+          { userEmail: user.email },
+          {
+            $set: {
+              userEmail: email || user.email,
+              userFullName: fullName || user.fullName,
             },
           }
         ),
         user.save(),
       ]);
       user = await User.findOne({ _id: userId });
+      const request = await Request.findOne({ email: oldEmail });
+      const support = await Support.findOne({ "user._id": userId });
+      request.fullName = user.fullName;
+      request.email = user.email;
+      request.profilePic = user.userProfilePic;
+      support.user = user;
+      await Promise.all([request.save(),support.save()]);
       return user;
     }
   ),

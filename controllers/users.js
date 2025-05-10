@@ -215,6 +215,7 @@ module.exports = {
       req.tokenPayload.id,
       req.body.fullName,
       req.body.email,
+      req.body.phoneNumber,
       req.file,
       req.body.currentPass,
       req.body.newPass
