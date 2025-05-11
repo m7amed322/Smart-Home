@@ -497,8 +497,9 @@ const userService = {
       request.profilePic = user.userProfilePic;
       if(support){
       support.user = user;
+      await support.save();
       }
-      await Promise.all([request.save(),support.save()]);
+      await request.save()
       return user;
     }
   ),
