@@ -479,7 +479,7 @@ const userService = {
           }
         ),
         Home.updateOne(
-          { userEmail: user.email },
+          { userEmail: oldEmail },
           {
             $set: {
               userEmail: email || user.email,
@@ -495,7 +495,9 @@ const userService = {
       request.fullName = user.fullName;
       request.email = user.email;
       request.profilePic = user.userProfilePic;
+      if(support){
       support.user = user;
+      }
       await Promise.all([request.save(),support.save()]);
       return user;
     }
