@@ -1,8 +1,4 @@
 module.exports = function (err, req, res, next) {
-  console.log({
-    message: err.message,
-    stack: err.stack,
-  });
   if (err.message == "access denied") {
     res.status(403).json({ error_message: err.message });
     return;

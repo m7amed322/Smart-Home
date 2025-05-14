@@ -30,7 +30,7 @@ const userValidation = {
     const schema = joi.object({
       fullName: joi.string().min(3).max(255),
       email: joi.string().email().min(3).max(255),
-      phoneNumber:joi.string().min(5).max(15).required(),
+      phoneNumber:joi.string().min(5).max(15),
       currentPass:joi.string().min(3).max(255),
       newPass:joi.string().min(3).max(255)
     });

@@ -1,4 +1,3 @@
-const mqttService = require("../Services/mqtt.js");
 const predict = require("../utils/consumptionPrediction.js");
 const userService = require("../Services/user.js");
 const accountValidation = require("../validations/account.js");

@@ -243,7 +243,7 @@ const userService = {
           await room.save();
           const user = await User.findOne({ "home._id": room.homeId });
           let alert;
-          if (predValue > 50) {
+          if (predValue > 2.5) {
             alert = await AlertService.createAlert(
               user._id,
               `from the device: ${room.led[indexOfled].name} of room : ${room.name} the predicted value after 6 hours: ${predValue} `,

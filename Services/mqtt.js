@@ -1,72 +1,435 @@
-const mqtt = require("mqtt");
-const { Home } = require("../models/home");
-class MqttService {
-  constructor() {
-    this.options = {
-      host: process.env.MQTThost,
-      port: process.env.MQTTport,
-      protocol: "mqtts",
-      username: process.env.MQTTusername,
-      password: process.env.MQTTpassword,
-    };
-
-    this.statusTopic = "+/+/+/status";
-    this.tempTopic = "+/temp";
-    this.client = mqtt.connect(this.options);
-    this.initializeMqtt();
-  }
-
-  initializeMqtt() {
-    this.client.on("connect", () => {
-      this.client.subscribe(this.statusTopic, (err) => {});
-      this.client.subscribe(this.tempTopic, (err) => {});
-    });
-
-    this.client.on("message", async (topic, message) => {
-      homeId = getHomeId(topic);
-      const home = await Home.findOne({ _id: homeId });
-      home.temp = message.toString();
-      home.save();
-    });
-  }
-
-  controlLed(homeId, roomName, state, ledNumber) {
-    return new Promise((resolve, reject) => {
-      const validRooms = [
-        "bedroom",
-        "guestroom",
-        "dinningroom",
-        "livingroom",
-        "corridor",
-      ];
-
-      if (!["on", "off"].includes(state)) {
-        reject(new Error("Invalid state. Use 'on' or 'off'."));
-        return;
-      }
-
-      if (!validRooms.includes(roomName)) {
-        reject(new Error("Invalid room name"));
-        return;
-      }
-
-      const topic = `${homeId}/${roomName}/led/${ledNumber}`;
-      const message = state.toUpperCase();
-
-      this.client.publish(topic, message, (err) => {
+const winston = require("winston");
+const { Sequential } = require("../models/sequentials");
+const { Device } = require("../models/devices");
+const { Prediction } = require("../models/predictions");
+const Home = require("../models/home");
+const _ = require("lodash");
+const Support = require("../models/support");
+const { Room } = require("../models/rooms");
+const Request = require("../models/request");
+const mqttOptions = {
+  host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
+  port: 8883,
+  protocol: "mqtts",
+  username: "smartthomee",
+  password: "smartt1Homee",
+};
+let deviceDataList = {};
+let TemperatureList = {};
+let ledStateList = {};
+// Topics
+const statusTopic = "+/+/+/status";
+const tempTopic = "+/temp";
+const dataTopic = "+/+/data";
+mqttServices = {
+  mqttClient: null,
+  connect(mqtt) {
+    const mqttClient = mqtt.connect(mqttOptions);
+    this.mqttClient.on("connect", () => {
+      winston.info("✅ Connected to HiveMQ Cloud MQTT Broker");
+      this.mqttClient.subscribe([statusTopic, tempTopic, dataTopic], (err) => {
         if (err) {
-          reject(err);
+          winston.error(`❌ Error subscribing: ${err}`);
         } else {
-          resolve(`LED turned ${state}`);
+          winston.info("📡 Subscribed to topics:");
         }
       });
     });
-  }
-}
-function getHomeId(topic) {
-  slashIndex = topic.indexOf("/");
-  homeId = topic.slice(0, slashIndex);
-  return homeId;
-}
+    ///////////////////////////////////////////
+    this.mqttClient.on("message", (topic, message) => {
+      const payload = message.toString();
+      if (topic === tempTopic) {
+        const slashIndex = _.indexOf(topic, "/");
+        const homeId = topic.slice(0, slashIndex);
+        const temperature = parseFloat(payload);
+        if (!isNaN(temperature)) {
+          TemperatureList[homeId] = temperature;
+        }
+      } else if (topic.includes("/status")) {
+        const parts = topic.split("/");
+        const homeId = parts[0];
+        const roomName = parts[1];
+        const deviceName = parts[2];
+        if (!ledStateList[homeId]) {
+          ledStateList[homeId] = [];
+        }
+        let roomEntry = ledStateList[homeId].find(
+          (entry) => entry.roomName === roomName
+        );
+        if (!roomEntry) {
+          roomEntry = { roomName, devices: [] };
+          ledStateList[homeId].push(roomEntry);
+        }
+        const deviceEntry = roomEntry.devices.find(
+          (d) => d.deviceName === deviceName
+        );
+        if (!deviceEntry) {
+          roomEntry.devices.push({ deviceName, status: payload });
+        } else {
+          deviceEntry.status = payload;
+        }
+      } else if (topic.endsWith("/data")) {
+        const parts = topic.split("/");
+        const homeId = parts[0];
+        const deviceName = parts[1];
+        const data = JSON.parse(payload);
+        if (!deviceDataList[homeId]) {
+          deviceDataList[homeId] = [];
+        }
+        deviceDataList[homeId].push({
+          deviceName,
+          data,
+        });
+      }
+    });
+  },
+  checkState(homeId, roomName, led) {
+    if (!ledStateList[homeId]) {
+      return false;
+    }
+    const roomEntry = ledStateList[homeId].find(
+      (room) => room.roomName === roomName
+    );
+    if (!roomEntry) {
+      return false;
+    }
+    const deviceEntry = roomEntry.devices.find(
+      (device) => device.deviceName === led
+    );
+    if (!deviceEntry) {
+      return false;
+    }
+    return true;
+  },
+  storeData: async (TemperatureList, deviceDataList) => {
+    try{
+      for (const homeId in TemperatureList){
+        await Home.updateOne({homeId},{$set:{temp:TemperatureList[homeId]}});
+      }
 
-module.exports = new MqttService();
+    }catch(err){
+      throw err;
+    }
+  },
+  controlLed: async (lightingId, homeId, roomName, state) => {
+    if (!lightingId || !homeId || !roomName || !state) {
+      throw new Error(
+        "Please specify lightingId, homeId, roomName, and state."
+      );
+    }
+    const message = state.toUpperCase();
+    const topic = `${homeId}/${roomName}/led/${lightingId}`;
+    if (!mqttServices.mqttClient.connected) {
+      throw new Error("MQTT client not connected");
+    }
+    await new Promise((resolve, reject) => {
+      mqttServices.mqttClient.publish(topic, message, (err) => {
+        if (err) reject(new Error("MQTT publish failed"));
+        else resolve();
+      });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1000)); 
+    if (mqttServices.checkState(homeId, roomName, lightingId)) {
+      return message;
+    } else {
+      throw new Error("Mqtt error");
+    }
+  },
+  /////////////////////////////////////////////////////////////////
+  createSequence: async (homeId, seqData) => {
+    if (new RegExp("^Lighting.?$", "i").test(seqData.deviceName)) {
+      try {
+        if (!seqData.roomName) {
+          throw new Error("roomName is required");
+        }
+        let deviceNameInSeq = seqData.deviceName;
+        deviceNameInSeq = seqData.deviceName.slice(
+          0,
+          seqData.deviceName.length - 1
+        );
+        const room = await Room.findOne({
+          homeId: homeId,
+          name: seqData.roomName,
+          "led.name": seqData.deviceName,
+        });
+        if (!room) {
+          throw new Error(
+            "either room or this led in this room is not found in this home"
+          );
+        }
+        const result = await Room.aggregate([
+          {
+            $match: {
+              name: seqData.roomName,
+              homeId: homeId,
+            },
+          },
+          { $unwind: "$led" },
+          {
+            $match: {
+              "led.name": seqData.deviceName,
+            },
+          },
+          {
+            $project: {
+              ledId: "$led._id",
+              _id: 0,
+            },
+          },
+        ]);
+        const ledId = result.length > 0 ? result[0].ledId : null;
+        if (result.length === 0) {
+          throw new Error("No room or LED found");
+        }
+
+        const seq = new Sequential({
+          home_id: homeId,
+          appliance: deviceNameInSeq,
+          temperature_setting_C: seqData.temp,
+          occupancy_status: seqData.occuped,
+          usage_duration_minutes: seqData.durationInMin,
+          device_id: ledId,
+          roomName: seqData.roomName,
+        });
+        const seqs = await Sequential.find({
+          home_id: homeId,
+          device_id: ledId,
+          roomName: seqData.roomName,
+        });
+        if (seqs.length == 0) {
+          seq.number = 1;
+        } else if (seqs.length > 0 && seqs.length < 12) {
+          seq.number = parseInt(seqs[seqs.length - 1].number) + 1;
+        } else if (seqs.length == 12) {
+          const n = seqs[0].number;
+          await Sequential.deleteOne({
+            number: n,
+            device_id: ledId,
+            home_id: homeId,
+          });
+          await Home.updateOne(
+            {
+              _id: homeId,
+              "rooms.name": seqData.roomName,
+              "rooms.led.name": seqData.deviceName,
+            },
+            {
+              $pop: { "rooms.$[room].led.$[led].seqs": -1 },
+            },
+            {
+              arrayFilters: [
+                { "room.name": seqData.roomName },
+                { "led.name": seqData.deviceName },
+              ],
+            }
+          );
+          await Room.updateOne(
+            { _id: room._id, "led._id": ledId },
+            { $pop: { "led.$.seqs": -1 } }
+          );
+          seq.number = n;
+        }
+        await seq.save();
+        await Home.updateOne(
+          {
+            _id: homeId,
+            "rooms.name": seqData.roomName,
+            "rooms.led.name": seqData.deviceName,
+          },
+          { $addToSet: { "rooms.$[room].led.$[led].seqs": seq } },
+          {
+            arrayFilters: [
+              { "room.name": seqData.roomName },
+              { "led.name": seqData.deviceName },
+            ],
+          }
+        );
+        await Room.updateOne(
+          { _id: room._id, "led._id": ledId },
+          { $addToSet: { "led.$.seqs": seq } }
+        );
+        const indexOfLed =
+          parseInt(seqData.deviceName[seqData.deviceName.length - 1]) - 1;
+        return { seq, room, device: null, indexOfLed };
+      } catch (err) {
+        throw (
+          (`failed to create sequence for Lighting in room : ${seqData.roomName} led : ${seqData.deviceName}`,
+          err)
+        );
+      }
+    } else {
+      try {
+        const device = await Device.findOne({
+          homeId: homeId,
+          name: seqData.deviceName,
+        });
+        if (!device) {
+          throw new Error("device of this home not found ");
+        }
+        let deviceNameInSeq = seqData.deviceName;
+        deviceNameInSeq = seqData.deviceName.slice(
+          0,
+          seqData.deviceName.length - 1
+        );
+        const seq = new Sequential({
+          home_id: homeId,
+          appliance: deviceNameInSeq,
+          temperature_setting_C: seqData.temp,
+          occupancy_status: seqData.occuped,
+          usage_duration_minutes: seqData.durationInMin,
+          device_id: device._id,
+        });
+        const seqs = await Sequential.find({
+          home_id: homeId,
+          device_id: device._id,
+        });
+        if (seqs.length == 0) {
+          seq.number = 1;
+        } else if (seqs.length > 0 && seqs.length < 12) {
+          seq.number = parseInt(seqs[seqs.length - 1].number) + 1;
+        } else if (seqs.length == 12) {
+          const n = seqs[0].number;
+          await Sequential.deleteOne({
+            number: n,
+            device_id: device._id,
+            home_id: homeId,
+          });
+          seq.number = n;
+        }
+        await seq.save();
+        device.seqs = await Sequential.find({
+          home_id: homeId,
+          device_id: device._id,
+        });
+        await device.save();
+        await Home.updateOne(
+          { _id: homeId, "devices.name": seqData.deviceName },
+          { $addToSet: { "devices.$.seqs": seq } }
+        );
+        return { seq, room: null, device, indexOfLed: null };
+      } catch (err) {
+        throw ("failed of creating a sequential document: ", err);
+      }
+    }
+  },
+  handlePrediction: async (
+    predFun,
+    io = null,
+    indexOfLed = null,
+    room = null,
+    device = null
+  ) => {
+    if (room) {
+      try {
+        let indexOfled = parseInt(indexOfLed);
+        if (room.led[indexOfled].seqs.length == 12) {
+          const predValue = predFun(
+            _.map(room.led[indexOfled].seqs, (obj) =>
+              _.pick(obj, [
+                "occupancy_status",
+                "temperature_setting_C",
+                "usage_duration_minutes",
+                "appliance",
+                "home_id",
+              ])
+            )
+          );
+          const prediction = await Prediction.findOne({
+            "device.name": room.led[indexOfled].name,
+            "device.homeId": room.homeId,
+            "device.id": room.led[indexOfled]._id,
+            roomName: room.name,
+          });
+          prediction.after_1hour = prediction.after_2hour;
+          prediction.after_2hour = prediction.after_3hour;
+          prediction.after_3hour = prediction.after_4hour;
+          prediction.after_4hour = prediction.after_5hour;
+          prediction.after_5hour = prediction.after_6hour;
+          prediction.after_6hour = predValue;
+          await prediction.save();
+          await Home.updateOne(
+            {
+              _id: room.homeId,
+              "rooms.name": room.name,
+              "rooms.led.name": room.led[indexOfled].name,
+            },
+            { $set: { "rooms.$[room].led.$[led].preds": prediction } },
+            {
+              arrayFilters: [
+                { "room.name": room.name },
+                { "led.name": room.led[indexOfled].name },
+              ],
+            }
+          );
+          room.led[indexOfLed].preds = prediction;
+          await room.save();
+          const user = await User.findOne({ "home._id": room.homeId });
+          let alert;
+          if (predValue > 50) {
+            alert = await AlertService.createAlert(
+              user._id,
+              `from the device: ${room.led[indexOfled].name} of room : ${room.name} the predicted value after 6 hours: ${predValue} `,
+              io
+            );
+          }
+          return { prediction, alert };
+        }
+        return { prediction: null, alert: null };
+      } catch (err) {
+        throw err;
+      }
+    } else if (device) {
+      try {
+        if (device.seqs.length == 12) {
+          // rather predFun as a parameter it will be the axios function that call the api
+          const predValue = predFun(
+            _.map(device.seqs, (obj) =>
+              _.pick(obj, [
+                "occupancy_status",
+                "temperature_setting_C",
+                "usage_duration_minutes",
+                "appliance",
+                "home_id",
+              ])
+            )
+          );
+          const prediction = await Prediction.findOne({
+            "device.name": device.name,
+            "device.homeId": device.homeId,
+            "device.id": device._id,
+          });
+          prediction.after_1hour = prediction.after_2hour;
+          prediction.after_2hour = prediction.after_3hour;
+          prediction.after_3hour = prediction.after_4hour;
+          prediction.after_4hour = prediction.after_5hour;
+          prediction.after_5hour = prediction.after_6hour;
+          prediction.after_6hour = predValue;
+          await prediction.save();
+          device.preds = await Prediction.findOne({
+            "device.name": device.name,
+            "device.homeId": device.homeId,
+            "device.id": device._id,
+          });
+          await device.save();
+          await Home.updateOne(
+            { _id: device.homeId, "devices._id": device._id },
+            { $set: { "devices.$.preds": prediction } }
+          );
+          const user = await User.findOne({ "home._id": device.homeId });
+          let alert;
+          if (predValue > 50) {
+            alert = await AlertService.createAlert(
+              user._id,
+              `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,
+              io
+            );
+          }
+          return { prediction, alert };
+        }
+        return { prediction: null, alert: null };
+      } catch (err) {
+        throw err;
+      }
+    }
+  },
+};
