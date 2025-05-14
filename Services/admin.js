@@ -310,7 +310,7 @@ const adminService = {
   }),
   replySupport: async (message, supportId) => {
     try {
-      const support = await Support.findOne({ _id: supportId });
+      const support = await Support.findOne({ _id: supportId,responsed:false });
       if (!support) {
         throw new Error("no support found with that ID");
       }
