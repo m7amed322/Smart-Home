@@ -49,6 +49,7 @@ async function sendEmail(option,templatePath) {
     userName: option.userName,
     userEmail: option.userEmail,
     userPassword: option.userPassword,
+    fullName:option.fullName,
     resetUrl: option.resetUrl,
     reply:option.reply
   };
