@@ -3,6 +3,7 @@ const userService = require("../Services/user.js");
 const accountValidation = require("../validations/account.js");
 const userValidation = require("../validations/user.js");
 const AlertService = require("../Services/alert.js");
+const mqttServices = require("../Services/mqtt");
 module.exports = {
   logIn: async (req, res, next) => {
     const { error } = accountValidation.acc(req.body);
@@ -222,6 +223,20 @@ module.exports = {
     res.json({
       user,
       message: "user updated successfully",
+    });
+  },
+  controlLed: async (req, res, next) => {
+    const { message, home } = await mqttServices.controlLed(
+      req.body.lightingId,
+      req.tokenPayload.homeId,
+      req.body.roomName,
+      req.body.state
+    );
+    res.json({
+      message: `the ${req.body.lightingId} in ${req.body.roomName} for ${home.userEmail} is successfully ${message}`,
+      userEmail:home.userEmail,
+      home:home,
+      state:message
     });
   },
 };

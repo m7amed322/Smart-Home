@@ -21,24 +21,24 @@ let ledStateList = {};
 const statusTopic = "+/+/+/status";
 const tempTopic = "+/temp";
 const dataTopic = "+/+/data";
-mqttServices = {
+const mqttServices = {
   mqttClient: null,
   connect(mqtt) {
-    const mqttClient = mqtt.connect(mqttOptions);
+    this.mqttClient = mqtt.connect(mqttOptions);
     this.mqttClient.on("connect", () => {
       winston.info("✅ Connected to HiveMQ Cloud MQTT Broker");
       this.mqttClient.subscribe([statusTopic, tempTopic, dataTopic], (err) => {
         if (err) {
           winston.error(`❌ Error subscribing: ${err}`);
         } else {
-          winston.info("📡 Subscribed to topics:");
+          winston.info("📡 Subscribed to topics");
         }
       });
     });
     ///////////////////////////////////////////
     this.mqttClient.on("message", (topic, message) => {
       const payload = message.toString();
-      if (topic === tempTopic) {
+      if (topic.includes("/temp")) {
         const slashIndex = _.indexOf(topic, "/");
         const homeId = topic.slice(0, slashIndex);
         const temperature = parseFloat(payload);
@@ -47,6 +47,7 @@ mqttServices = {
         }
       } else if (topic.includes("/status")) {
         const parts = topic.split("/");
+        // const data = JSON.parse(payload);
         const homeId = parts[0];
         const roomName = parts[1];
         const deviceName = parts[2];
@@ -64,9 +65,17 @@ mqttServices = {
           (d) => d.deviceName === deviceName
         );
         if (!deviceEntry) {
-          roomEntry.devices.push({ deviceName, status: payload });
+          if (new RegExp(".*\\bON\\b.*", "i").test(payload)) {
+            roomEntry.devices.push({ deviceName, status: "on" });
+          } else {
+            roomEntry.devices.push({ deviceName, status: "off" });
+          }
         } else {
-          deviceEntry.status = payload;
+          if (new RegExp(".*\\bON\\b.*", "i").test(payload)) {
+            deviceEntry.status = "on";
+          } else {
+            deviceEntry.status = "off";
+          }
         }
       } else if (topic.endsWith("/data")) {
         const parts = topic.split("/");
@@ -102,12 +111,14 @@ mqttServices = {
     return true;
   },
   storeData: async (TemperatureList, deviceDataList) => {
-    try{
-      for (const homeId in TemperatureList){
-        await Home.updateOne({homeId},{$set:{temp:TemperatureList[homeId]}});
+    try {
+      for (const homeId in TemperatureList) {
+        await Home.updateOne(
+          { homeId },
+          { $set: { temp: TemperatureList[homeId] } }
+        );
       }
-
-    }catch(err){
+    } catch (err) {
       throw err;
     }
   },
@@ -117,6 +128,18 @@ mqttServices = {
         "Please specify lightingId, homeId, roomName, and state."
       );
     }
+    const home = await Home.findOne({
+      _id: homeId,
+      rooms: {
+        $elemMatch: {
+          name: roomName,
+          "led.name": lightingId,
+        },
+      },
+    });
+    if (!home) {
+      throw new Error("led not found !");
+    }
     const message = state.toUpperCase();
     const topic = `${homeId}/${roomName}/led/${lightingId}`;
     if (!mqttServices.mqttClient.connected) {
@@ -125,12 +148,14 @@ mqttServices = {
     await new Promise((resolve, reject) => {
       mqttServices.mqttClient.publish(topic, message, (err) => {
         if (err) reject(new Error("MQTT publish failed"));
-        else resolve();
+        else {
+          resolve();
+        }
       });
     });
-    await new Promise((resolve) => setTimeout(resolve, 1000)); 
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     if (mqttServices.checkState(homeId, roomName, lightingId)) {
-      return message;
+      return { message, home };
     } else {
       throw new Error("Mqtt error");
     }
@@ -433,3 +458,4 @@ mqttServices = {
     }
   },
 };
+module.exports = mqttServices;
