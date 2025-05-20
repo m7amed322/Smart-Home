@@ -29,5 +29,5 @@ router.delete("/alerts",auth,userController.deleteAlerts);
 router.delete("/alert/:id",auth,userController.deleteAlertById);
 router.patch("/me",auth,upload.single('profilePic'),userController.updateMe);
 router.post("/control",auth,userController.controlLed);
-router.post("/ledState",auth,userController.ledsState);
+router.get("/ledState/:roomName",auth,userController.ledsState);
 module.exports = router;

@@ -240,7 +240,7 @@ module.exports = {
     });
   },
   ledsState:async(req,res,nex)=>{
-    const ledState = await mqttServices.currentLedsState(req.tokenPayload.homeId,req.body.roomName);
+    const ledState = await mqttServices.currentLedsState(req.tokenPayload.homeId,req.params.roomName);
     res.json(ledState);
   }
 };
