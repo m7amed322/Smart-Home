@@ -7,6 +7,7 @@ const _ = require("lodash");
 const Support = require("../models/support");
 const { Room } = require("../models/rooms");
 const Request = require("../models/request");
+const {wrapper} = require("../utils/helper")
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
   port: 8883,
@@ -153,13 +154,27 @@ const mqttServices = {
         }
       });
     });
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     if (mqttServices.checkState(homeId, roomName, lightingId)) {
+      await Room.updateOne({
+      homeId:homeId,
+      name:roomName,
+      "led.name":lightingId,
+    },{$set:{"led.$.state":state}});
       return { message, home };
     } else {
       throw new Error("Mqtt error");
     }
   },
+  currentLedsState:wrapper(async(homeId,roomName)=>{
+    const room = await Room.findOne({homeId:homeId,name:roomName});
+    if(!room){
+      throw new Error("room not found");
+    }
+    
+    const ledState = room.led.map(led=>({name:led.name,state:led.state}));
+    return ledState;
+  }),
   /////////////////////////////////////////////////////////////////
   createSequence: async (homeId, seqData) => {
     if (new RegExp("^Lighting.?$", "i").test(seqData.deviceName)) {

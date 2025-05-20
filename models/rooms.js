@@ -27,6 +27,7 @@ const roomSchema = new mongoose.Schema({
           enum: {
             values: ["on", "off"],
           },
+          default: "off",
         },
         stateDate: Date,
       }),

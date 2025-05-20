@@ -3,7 +3,7 @@ const joi = require("joi");
 joi.objectId = require("joi-objectid")(joi);
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-// require("dotenv").config();
+require("dotenv").config();
 const jwtPrivateKey = process.env.jwtPrivateKey;
 const userSchema = new mongoose.Schema({
   fullName: { type: String, minlength: 3, maxlength: 255, required: true },

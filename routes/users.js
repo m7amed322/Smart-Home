@@ -28,5 +28,6 @@ router.post("/createSeq", auth, userController.createSequence);
 router.delete("/alerts",auth,userController.deleteAlerts);
 router.delete("/alert/:id",auth,userController.deleteAlertById);
 router.patch("/me",auth,upload.single('profilePic'),userController.updateMe);
-router.post("/control",auth,userController.controlLed)
+router.post("/control",auth,userController.controlLed);
+router.post("/ledState",auth,userController.ledsState);
 module.exports = router;
