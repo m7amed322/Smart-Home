@@ -7,7 +7,8 @@ const _ = require("lodash");
 const Support = require("../models/support");
 const { Room } = require("../models/rooms");
 const Request = require("../models/request");
-const {wrapper} = require("../utils/helper")
+const { wrapper } = require("../utils/helper");
+const predict = require("../utils/consumptionPrediction.js");
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
   port: 8883,
@@ -48,10 +49,10 @@ const mqttServices = {
         }
       } else if (topic.includes("/status")) {
         const parts = topic.split("/");
-        // const data = JSON.parse(payload);
         const homeId = parts[0];
         const roomName = parts[1];
         const deviceName = parts[2];
+        const data = JSON.parse(payload);
         if (!ledStateList[homeId]) {
           ledStateList[homeId] = [];
         }
@@ -66,16 +67,28 @@ const mqttServices = {
           (d) => d.deviceName === deviceName
         );
         if (!deviceEntry) {
-          if (new RegExp(".*\\bON\\b.*", "i").test(payload)) {
+          if (data.state.toLowerCase() === "on") {
             roomEntry.devices.push({ deviceName, status: "on" });
-          } else {
-            roomEntry.devices.push({ deviceName, status: "off" });
+          } else if (data.state.toLowerCase() === "off") {
+            const duration = parseFloat(data.duration) / 60;
+            const energyConsumption = parseFloat(data.energyConsumption);
+            roomEntry.devices.push({
+              deviceName,
+              status: "off",
+              duration,
+              energyConsumption,
+            });
           }
         } else {
-          if (new RegExp(".*\\bON\\b.*", "i").test(payload)) {
+          if (data.state.toLowerCase() === "on") {
             deviceEntry.status = "on";
-          } else {
+          } else if (data.state.toLowerCase() === "off") {
             deviceEntry.status = "off";
+            const duration = parseFloat(data.duration) / 60;
+            const energyConsumption = parseFloat(data.energyConsumption);
+            deviceEntry.duration = (deviceEntry.duration || 0) + duration;
+            deviceEntry.energyConsumption =
+              (deviceEntry.energyConsumption || 0) + energyConsumption;
           }
         }
       } else if (topic.endsWith("/data")) {
@@ -83,13 +96,26 @@ const mqttServices = {
         const homeId = parts[0];
         const deviceName = parts[1];
         const data = JSON.parse(payload);
+        const duration = parseFloat(data.duration)/60;
+        const energyConsumption = parseFloat(data.energyConsumption);
         if (!deviceDataList[homeId]) {
           deviceDataList[homeId] = [];
         }
-        deviceDataList[homeId].push({
-          deviceName,
-          data,
-        });
+        let deviceEntry = deviceDataList[homeId].find(
+          (entry) => entry.deviceName === deviceName
+        );
+        if (!deviceEntry) {
+          deviceDataList[homeId].push({
+            deviceName,
+            data: {
+              duration,
+              energyConsumption,
+            },
+          });
+        } else {
+          deviceEntry.data.duration += duration;
+          deviceEntry.data.energyConsumption += energyConsumption;
+        }
       }
     });
   },
@@ -111,13 +137,58 @@ const mqttServices = {
     }
     return true;
   },
-  storeData: async (TemperatureList, deviceDataList) => {
+  async storeData() {
     try {
-      for (const homeId in TemperatureList) {
-        await Home.updateOne(
-          { homeId },
-          { $set: { temp: TemperatureList[homeId] } }
-        );
+      if (TemperatureList) {
+        for (const homeId in TemperatureList) {
+          await Home.updateOne(
+            { homeId },
+            { $set: { temp: TemperatureList[homeId] } }
+          );
+        }
+      }
+      if (ledStateList) {
+        for (const homeId in ledStateList) {
+          for (const room of ledStateList[homeId]) {
+            const roomName = room.roomName;
+            for (const device of room.devices) {
+              const update = {
+                $set: {
+                  "led.$.state": device.status,
+                  "led.$.energyConsumptionDate": new Date(),
+                },
+                $inc: {
+                  "led.$.energyConsumption": device.energyConsumption || 0,
+                  "led.$.usageDurationInMin": device.duration || 0,
+                },
+              };
+              await Room.updateOne(
+                { homeId, name: roomName, "led.name": device.deviceName },
+                update,
+                { upsert: false }
+              );
+            }
+          }
+        }
+      }
+      if (deviceDataList) {
+        for (const homeId in deviceDataList) {
+          for (const device of deviceDataList[homeId]) {
+            const deviceName = device.deviceName;
+            const update = {
+              $set: {
+                energyConsumptionDate: new Date(),
+              },
+              $inc: {
+                energyConsumption: device.data.energyConsumption,
+                usageDurationInMin: device.data.duration,
+              },
+            };
+            await Device.updateOne({ homeId, name: deviceName }, update, {
+              upsert: false,
+            });
+          }
+        }
       }
     } catch (err) {
       throw err;
@@ -154,39 +225,46 @@ const mqttServices = {
         }
       });
     });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     if (mqttServices.checkState(homeId, roomName, lightingId)) {
-      await Room.updateOne({
-      homeId:homeId,
-      name:roomName,
-      "led.name":lightingId,
-    },{$set:{"led.$.state":state}});
+      await Room.updateOne(
+        {
+          homeId: homeId,
+          name: roomName,
+          "led.name": lightingId,
+        },
+        { $set: { "led.$.state": state } }
+      );
       return { message, home };
     } else {
       throw new Error("Mqtt error");
     }
   },
-  currentLedsState:wrapper(async(homeId,roomName)=>{
-    const room = await Room.findOne({homeId:homeId,name:roomName});
-    if(!room){
+  currentLedsState: wrapper(async (homeId, roomName) => {
+    const room = await Room.findOne({ homeId: homeId, name: roomName });
+    if (!room) {
       throw new Error("room not found");
     }
-    
-    const ledState = room.led.map(led=>({name:led.name,state:led.state}));
+    const ledState = room.led.map((led) => ({
+      name: led.name,
+      state: led.state,
+    }));
     return ledState;
   }),
   /////////////////////////////////////////////////////////////////
-  createSequence: async (homeId, seqData) => {
+  async createSequence(homeId, seqData) {
     if (new RegExp("^Lighting.?$", "i").test(seqData.deviceName)) {
       try {
         if (!seqData.roomName) {
           throw new Error("roomName is required");
         }
         let deviceNameInSeq = seqData.deviceName;
-        deviceNameInSeq = seqData.deviceName.slice(
-          0,
-          seqData.deviceName.length - 1
-        );
+        if (/.*\d$/.test(seqData.deviceName)) {
+          deviceNameInSeq = seqData.deviceName.slice(
+            0,
+            seqData.deviceName.length - 1
+          );
+        }
         const room = await Room.findOne({
           homeId: homeId,
           name: seqData.roomName,
@@ -304,13 +382,16 @@ const mqttServices = {
           name: seqData.deviceName,
         });
         if (!device) {
+          console.log(homeId, seqData.deviceName);
           throw new Error("device of this home not found ");
         }
         let deviceNameInSeq = seqData.deviceName;
-        deviceNameInSeq = seqData.deviceName.slice(
-          0,
-          seqData.deviceName.length - 1
-        );
+       if (/.*\d$/.test(seqData.deviceName)) {
+          deviceNameInSeq = seqData.deviceName.slice(
+            0,
+            seqData.deviceName.length - 1
+          );
+        }
         const seq = new Sequential({
           home_id: homeId,
           appliance: deviceNameInSeq,
@@ -352,13 +433,13 @@ const mqttServices = {
       }
     }
   },
-  handlePrediction: async (
+  async handlePrediction(
     predFun,
     io = null,
     indexOfLed = null,
     room = null,
     device = null
-  ) => {
+  ) {
     if (room) {
       try {
         let indexOfled = parseInt(indexOfLed);
@@ -471,6 +552,56 @@ const mqttServices = {
         throw err;
       }
     }
+  },
+  async processSeq(io) {
+    if (deviceDataList) {
+      for (const homeId in deviceDataList) {
+        for (const devicee of deviceDataList[homeId]) {
+          const deviceName = devicee.deviceName;
+          const seqData = {
+            occuped: "Occupied",
+            temp: TemperatureList[homeId],
+            durationInMin: devicee.data.duration,
+            deviceName: deviceName,
+          };
+          const { seq, room, device, indexOfLed } =
+            await mqttServices.createSequence(homeId, seqData);
+          await mqttServices.handlePrediction(predict, io, null, null, device);
+        }
+      }
+    }
+    if (ledStateList) {
+      for (const homeId in ledStateList) {
+        for (const room of ledStateList[homeId]) {
+          const roomName = room.roomName;
+          for (const devicee of room.devices) {
+            if (devicee.status === "off") {
+              const seqData = {
+                occuped: "Occupied",
+                temp: TemperatureList[homeId],
+                durationInMin: devicee.duration,
+                deviceName: devicee.deviceName,
+                roomName: roomName,
+              };
+              const { seq, room, device, indexOfLed } =
+                await mqttServices.createSequence(homeId, seqData);
+              await mqttServices.handlePrediction(
+                predict,
+                io,
+                indexOfLed,
+                room,
+                null
+              );
+            }
+          }
+        }
+      }
+    }
+  },
+  resetLists() {
+    deviceDataList = {};
+    TemperatureList = {};
+    ledStateList = {};
   },
 };
 module.exports = mqttServices;

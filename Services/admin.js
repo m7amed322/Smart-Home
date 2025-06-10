@@ -122,7 +122,7 @@ const adminService = {
     request.homeCreated = true;
     await request.save();
     return home;
-  },
+  },  
   async createDevice(Name, homeId) {
     if (!Name || !homeId) {
       throw new Error("Device name and homeId are required");
@@ -158,7 +158,6 @@ const adminService = {
             return match ? parseInt(match[0]) : "";
           })
         );
-        console.log(`the max number is : ${maxNumber}`);
         finalName = `${finalName}${maxNumber + 1}`;
       }
       const device = new Device({

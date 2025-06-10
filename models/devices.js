@@ -22,8 +22,9 @@ const deviceSchema = new mongoose.Schema({
   },
   preds: predictionSchema,
   homeId: { type: String, required: true },
-  energyConsumption: { type: Number },
+  energyConsumption: { type: Number,default:0,min:0 },
   energyConsumptionDate: { type: Date },
+  usageDurationInMin:{type:Number,default:0,min:0}
 });
 const Device = mongoose.model("device", deviceSchema);
 exports.Device = Device;

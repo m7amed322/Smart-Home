@@ -45,10 +45,11 @@
   .header-container {
     background-color: #06507f;
     text-align: center;
+    height: 100%;
   }
   
   .header-container img {
-    max-width: 50%;
+    width: 50%;
     height: 100%;
     display: inline;
     margin-top: 40px;
@@ -84,6 +85,7 @@
     margin-top: 20px;
     width: 100%;
     margin:auto;
+    column-gap: 5px;
   }
   
   .service-item {
@@ -146,14 +148,15 @@
     font-size: 14px;
   }
   
-  
+
   @media only screen and (max-width: 1500px) {
     .header-container h1,
     .header-container p {
       font-size: 20px;
     }
     .header-container img{
-      height: 70%;
+      width: 50%;
+      height: auto;
     }
   }
   
@@ -161,6 +164,10 @@
     .header-container h1,
     .header-container p {
       font-size: 20px;
+    }
+        .header-container img{
+      width: 80%;
+      height: auto;
     }
 
 
@@ -186,6 +193,10 @@
       margin-bottom: 15px;
     }
 
+        .header-container img{
+      width: 70%;
+      height: auto;
+    }
   
     header img {
       width: 35%;

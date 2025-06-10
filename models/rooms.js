@@ -20,8 +20,9 @@ const roomSchema = new mongoose.Schema({
         },
         seqs: [sequentialSchema],
         preds: predictionSchema,
-        energyConsumption: { type: Number },
+        energyConsumption: { type: Number,default:0,min:0 },
         energyConsumptionDate: { type: Date },
+        usageDurationInMin:{type:Number,default:0,min:0},
         state: {
           type: String,
           enum: {

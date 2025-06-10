@@ -234,13 +234,26 @@ module.exports = {
     );
     res.json({
       message: `the ${req.body.lightingId} in ${req.body.roomName} for ${home.userEmail} is successfully ${message}`,
-      userEmail:home.userEmail,
-      home:home,
-      state:message
+      userEmail: home.userEmail,
+      home: home,
+      state: message,
     });
   },
-  ledsState:async(req,res,nex)=>{
-    const ledState = await mqttServices.currentLedsState(req.tokenPayload.homeId,req.params.roomName);
+  ledsState: async (req, res, next) => {
+    const ledState = await mqttServices.currentLedsState(
+      req.tokenPayload.homeId,
+      req.params.roomName
+    );
     res.json(ledState);
-  }
+  },
+  changePassword: async (req, res, next) => {
+    const user = await userService.changePassword(
+      req.body.newPass,
+      req.body.currentPass,
+      req.tokenPayload.id
+    );
+    res.json({
+      user,
+    });
+  },
 };

@@ -14,302 +14,6 @@ const Support = require("../models/support");
 const { Room } = require("../models/rooms");
 const Request = require("../models/request");
 const userService = {
-  createSequence: async (homeId, seqData) => {
-    if (new RegExp("^Lighting.?$", "i").test(seqData.deviceName)) {
-      try {
-        if (!seqData.roomName) {
-          throw new Error("roomName is required");
-        }
-        let deviceNameInSeq = seqData.deviceName;
-        deviceNameInSeq = seqData.deviceName.slice(
-          0,
-          seqData.deviceName.length - 1
-        );
-        const room = await Room.findOne({
-          homeId: homeId,
-          name: seqData.roomName,
-          "led.name": seqData.deviceName,
-        });
-        if (!room) {
-          throw new Error(
-            "either room or this led in this room is not found in this home"
-          );
-        }
-        const result = await Room.aggregate([
-          {
-            $match: {
-              name: seqData.roomName,
-              homeId: homeId,
-            },
-          },
-          { $unwind: "$led" },
-          {
-            $match: {
-              "led.name": seqData.deviceName,
-            },
-          },
-          {
-            $project: {
-              ledId: "$led._id",
-              _id: 0,
-            },
-          },
-        ]);
-        const ledId = result.length > 0 ? result[0].ledId : null;
-        if (result.length === 0) {
-          throw new Error("No room or LED found");
-        }
-
-        const seq = new Sequential({
-          home_id: homeId,
-          appliance: deviceNameInSeq,
-          temperature_setting_C: seqData.temp,
-          occupancy_status: seqData.occuped,
-          usage_duration_minutes: seqData.durationInMin,
-          device_id: ledId,
-          roomName: seqData.roomName,
-        });
-        const seqs = await Sequential.find({
-          home_id: homeId,
-          device_id: ledId,
-          roomName: seqData.roomName,
-        });
-        if (seqs.length == 0) {
-          seq.number = 1;
-        } else if (seqs.length > 0 && seqs.length < 12) {
-          seq.number = parseInt(seqs[seqs.length - 1].number) + 1;
-        } else if (seqs.length == 12) {
-          const n = seqs[0].number;
-          await Sequential.deleteOne({
-            number: n,
-            device_id: ledId,
-            home_id: homeId,
-          });
-          await Home.updateOne(
-            {
-              _id: homeId,
-              "rooms.name": seqData.roomName,
-              "rooms.led.name": seqData.deviceName,
-            },
-            {
-              $pop: { "rooms.$[room].led.$[led].seqs": -1 },
-            },
-            {
-              arrayFilters: [
-                { "room.name": seqData.roomName },
-                { "led.name": seqData.deviceName },
-              ],
-            }
-          );
-          await Room.updateOne(
-            { _id: room._id, "led._id": ledId },
-            { $pop: { "led.$.seqs": -1 } }
-          );
-          seq.number = n;
-        }
-        await seq.save();
-        await Home.updateOne(
-          {
-            _id: homeId,
-            "rooms.name": seqData.roomName,
-            "rooms.led.name": seqData.deviceName,
-          },
-          { $addToSet: { "rooms.$[room].led.$[led].seqs": seq } },
-          {
-            arrayFilters: [
-              { "room.name": seqData.roomName },
-              { "led.name": seqData.deviceName },
-            ],
-          }
-        );
-        await Room.updateOne(
-          { _id: room._id, "led._id": ledId },
-          { $addToSet: { "led.$.seqs": seq } }
-        );
-        const indexOfLed =
-          parseInt(seqData.deviceName[seqData.deviceName.length - 1]) - 1;
-        return { seq, room, device: null, indexOfLed };
-      } catch (err) {
-        throw (
-          (`failed to create sequence for Lighting in room : ${seqData.roomName} led : ${seqData.deviceName}`,
-          err)
-        );
-      }
-    } else {
-      try {
-        const device = await Device.findOne({
-          homeId: homeId,
-          name: seqData.deviceName,
-        });
-        if (!device) {
-          throw new Error("device of this home not found ");
-        }
-        let deviceNameInSeq = seqData.deviceName;
-        deviceNameInSeq = seqData.deviceName.slice(
-          0,
-          seqData.deviceName.length - 1
-        );
-        const seq = new Sequential({
-          home_id: homeId,
-          appliance: deviceNameInSeq,
-          temperature_setting_C: seqData.temp,
-          occupancy_status: seqData.occuped,
-          usage_duration_minutes: seqData.durationInMin,
-          device_id: device._id,
-        });
-        const seqs = await Sequential.find({
-          home_id: homeId,
-          device_id: device._id,
-        });
-        if (seqs.length == 0) {
-          seq.number = 1;
-        } else if (seqs.length > 0 && seqs.length < 12) {
-          seq.number = parseInt(seqs[seqs.length - 1].number) + 1;
-        } else if (seqs.length == 12) {
-          const n = seqs[0].number;
-          await Sequential.deleteOne({
-            number: n,
-            device_id: device._id,
-            home_id: homeId,
-          });
-          seq.number = n;
-        }
-        await seq.save();
-        device.seqs = await Sequential.find({
-          home_id: homeId,
-          device_id: device._id,
-        });
-        await device.save();
-        await Home.updateOne(
-          { _id: homeId, "devices.name": seqData.deviceName },
-          { $addToSet: { "devices.$.seqs": seq } }
-        );
-        return { seq, room: null, device, indexOfLed: null };
-      } catch (err) {
-        throw ("failed of creating a sequential document: ", err);
-      }
-    }
-  },
-  handlePrediction: async (
-    predFun,
-    io = null,
-    indexOfLed = null,
-    room = null,
-    device = null
-  ) => {
-    if (room) {
-      try {
-        let indexOfled = parseInt(indexOfLed);
-        if (room.led[indexOfled].seqs.length == 12) {
-          const predValue = predFun(
-            _.map(room.led[indexOfled].seqs, (obj) =>
-              _.pick(obj, [
-                "occupancy_status",
-                "temperature_setting_C",
-                "usage_duration_minutes",
-                "appliance",
-                "home_id",
-              ])
-            )
-          );
-          const prediction = await Prediction.findOne({
-            "device.name": room.led[indexOfled].name,
-            "device.homeId": room.homeId,
-            "device.id": room.led[indexOfled]._id,
-            roomName: room.name,
-          });
-          prediction.after_1hour = prediction.after_2hour;
-          prediction.after_2hour = prediction.after_3hour;
-          prediction.after_3hour = prediction.after_4hour;
-          prediction.after_4hour = prediction.after_5hour;
-          prediction.after_5hour = prediction.after_6hour;
-          prediction.after_6hour = predValue;
-          await prediction.save();
-          await Home.updateOne(
-            {
-              _id: room.homeId,
-              "rooms.name": room.name,
-              "rooms.led.name": room.led[indexOfled].name,
-            },
-            { $set: { "rooms.$[room].led.$[led].preds": prediction } },
-            {
-              arrayFilters: [
-                { "room.name": room.name },
-                { "led.name": room.led[indexOfled].name },
-              ],
-            }
-          );
-          room.led[indexOfLed].preds = prediction;
-          await room.save();
-          const user = await User.findOne({ "home._id": room.homeId });
-          let alert;
-          if (predValue > 2.5) {
-            alert = await AlertService.createAlert(
-              user._id,
-              `from the device: ${room.led[indexOfled].name} of room : ${room.name} the predicted value after 6 hours: ${predValue} `,
-              io
-            );
-          }
-          return { prediction, alert };
-        }
-        return { prediction: null, alert: null };
-      } catch (err) {
-        throw err;
-      }
-    } else if (device) {
-      try {
-        if (device.seqs.length == 12) {
-          // rather predFun as a parameter it will be the axios function that call the api
-          const predValue = predFun(
-            _.map(device.seqs, (obj) =>
-              _.pick(obj, [
-                "occupancy_status",
-                "temperature_setting_C",
-                "usage_duration_minutes",
-                "appliance",
-                "home_id",
-              ])
-            )
-          );
-          const prediction = await Prediction.findOne({
-            "device.name": device.name,
-            "device.homeId": device.homeId,
-            "device.id": device._id,
-          });
-          prediction.after_1hour = prediction.after_2hour;
-          prediction.after_2hour = prediction.after_3hour;
-          prediction.after_3hour = prediction.after_4hour;
-          prediction.after_4hour = prediction.after_5hour;
-          prediction.after_5hour = prediction.after_6hour;
-          prediction.after_6hour = predValue;
-          await prediction.save();
-          device.preds = await Prediction.findOne({
-            "device.name": device.name,
-            "device.homeId": device.homeId,
-            "device.id": device._id,
-          });
-          await device.save();
-          await Home.updateOne(
-            { _id: device.homeId, "devices._id": device._id },
-            { $set: { "devices.$.preds": prediction } }
-          );
-          const user = await User.findOne({ "home._id": device.homeId });
-          let alert;
-          if (predValue > 50) {
-            alert = await AlertService.createAlert(
-              user._id,
-              `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,
-              io
-            );
-          }
-          return { prediction, alert };
-        }
-        return { prediction: null, alert: null };
-      } catch (err) {
-        throw err;
-      }
-    }
-  },
   logIn: wrapper(async (email, password) => {
     let user = await User.findOne({ email: email });
     if (!user) {
@@ -433,40 +137,17 @@ const userService = {
     return user.email;
   }),
   updateMe: wrapper(
-    async (
-      userId,
-      fullName,
-      email,
-      phoneNumber,
-      userProfilePic,
-      currentPass,
-      newPass
-    ) => {
+    async (userId, fullName, email, phoneNumber, userProfilePic) => {
       let user = await User.findOne({ _id: userId });
       const oldEmail = user.email;
       if (!user) {
         throw new Error("user not found");
-      }
-      if (newPass) {
-        if (!currentPass) {
-          throw new Error("current password is required");
-        }
-        const pass = await bcrypt.compare(currentPass, user.password);
-        if (!pass) {
-          throw new Error("invalid password");
-        }
-        const salt = await bcrypt.genSalt(10);
-        let password = await bcrypt.hash(newPass, salt);
-        user.password = password;
-        user.passwordChangeAt = new Date();
-        user.isActive=true;
       }
       if (userProfilePic) {
         user.userProfilePic =
           "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
           userProfilePic.path.replace("uploads\\", "");
       }
-
       await Promise.all([
         User.updateOne(
           { _id: userId },
@@ -495,13 +176,34 @@ const userService = {
       request.fullName = user.fullName;
       request.email = user.email;
       request.profilePic = user.userProfilePic;
-      if(support){
-      support.user = user;
-      await support.save();
+      if (support) {
+        support.user = user;
+        await support.save();
       }
-      await request.save()
+      await request.save();
       return user;
     }
   ),
+  changePassword: async (newPass, currentPass, userId) => {
+    const user = await User.findOne({ _id: userId });
+    if (!user) {
+      throw new Error("user not found");
+    }
+    if (newPass) {
+      if (!currentPass) {
+        throw new Error("current password is required");
+      }
+      const pass = await bcrypt.compare(currentPass, user.password);
+      if (!pass) {
+        throw new Error("invalid password");
+      }
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPass, salt);
+      user.passwordChangeAt = new Date();
+      user.isActive = true;
+      await user.save();
+    }
+    return user;
+  },
 };
 module.exports = userService;

@@ -23,11 +23,10 @@ router.put("/alert/markAllAsRead",auth,userController.markAllAsRead);
 router.put("/alert/markAsRead/:id",auth,userController.markAsRead);
 router.post("/support", auth, userController.support);
 router.post("/logout", auth, userController.logout);
-router.post("/control", auth, userController.controlLed);
-router.post("/createSeq", auth, userController.createSequence);
 router.delete("/alerts",auth,userController.deleteAlerts);
 router.delete("/alert/:id",auth,userController.deleteAlertById);
 router.patch("/me",auth,upload.single('profilePic'),userController.updateMe);
+router.patch("/password",auth,userController.changePassword)
 router.post("/control",auth,userController.controlLed);
 router.get("/ledState/:roomName",auth,userController.ledsState);
 module.exports = router;

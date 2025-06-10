@@ -18,7 +18,7 @@ const sequentialSchema = new mongoose.Schema({
   },
   usage_duration_minutes: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 60,
     required: true,
     default: null,
