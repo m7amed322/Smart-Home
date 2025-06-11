@@ -4,14 +4,16 @@ const { Prediction } = require("../models/predictions");
 const Admin = require("../models/admin");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
-const Home  = require("../models/home");
+const Home = require("../models/home");
 const { wrapper } = require("../utils/helper");
 const path = require("path");
 const sendEmail = require("./emaiil");
-const Support  = require("../models/support");
-const Request  = require("../models/request");
+const Support = require("../models/support");
+const Request = require("../models/request");
 const { Room } = require("../models/rooms");
 const { User } = require("../models/user");
+const { sequence } = require("../validations/user");
+const { Sequential } = require("../models/sequentials");
 const adminService = {
   logIn: wrapper(async (email, password) => {
     let admin = await Admin.findOne({ email: email });
@@ -122,7 +124,7 @@ const adminService = {
     request.homeCreated = true;
     await request.save();
     return home;
-  },  
+  },
   async createDevice(Name, homeId) {
     if (!Name || !homeId) {
       throw new Error("Device name and homeId are required");
@@ -309,7 +311,10 @@ const adminService = {
   }),
   replySupport: async (message, supportId) => {
     try {
-      const support = await Support.findOne({ _id: supportId,responsed:false });
+      const support = await Support.findOne({
+        _id: supportId,
+        responsed: false,
+      });
       if (!support) {
         throw new Error("no support found with that ID");
       }
@@ -318,7 +323,7 @@ const adminService = {
         {
           subject: `replying your support`,
           reply: message,
-          fullName:support.user.fullName,
+          fullName: support.user.fullName,
           to: support.user.email,
         },
         templatePath
@@ -330,5 +335,92 @@ const adminService = {
       throw err;
     }
   },
+  deleteDevice: wrapper(async (homeId, Name) => {
+    const device = await Device.findOne({ name: Name, homeId: homeId });
+    const selectedDeviceId = device._id;
+    if (!device) {
+      throw new Error("device not found");
+    }
+    const sameNameDevices = await Device.find({
+      name: new RegExp(`^${Name.slice(0, Name.length - 1)}.?$`, "i"),
+      homeId: homeId,
+    });
+    const orderN = parseInt(Name[Name.length - 1]);
+    if (sameNameDevices.length == 2) {
+      let otherDeviceId,
+        otherDeviceName = Name.slice(0, Name.length - 1);
+      if (orderN == 1) {
+        otherDeviceId = sameNameDevices[1]._id;
+      } else {
+        otherDeviceId = sameNameDevices[0]._id;
+      }
+      await Promise.all([
+        Device.updateOne(
+          { _id: otherDeviceId },
+          { $set: { name: otherDeviceName } }
+        ),
+        Home.updateOne(
+          { _id: homeId, "devices._id": otherDeviceId },
+          { $set: { "devices.$.name": otherDeviceName } }
+        ),
+        Prediction.updateMany(
+          { "device.id": otherDeviceId, "device.homeId": homeId },
+          { $set: { "device.name": otherDeviceName } }
+        ),
+      ]);
+    } else if (sameNameDevices.length > 2) {
+      if (orderN < sameNameDevices.length) {
+        let name = Name.slice(0, Name.length - 1);
+        let count = orderN;
+        let updatePromises = [];
+        for (let i = orderN; i < sameNameDevices.length; i++) {
+          await Device.updateOne(
+            { _id: sameNameDevices[i]._id },
+            { $set: { name: name + count } }
+          );
+          await Home.updateOne(
+            { _id: homeId, "devices._id": sameNameDevices[i]._id },
+            { $set: { "devices.$.name": name + count } }
+          );
+          await Prediction.updateMany(
+            { "device.id": sameNameDevices[i]._id, "device.homeId": homeId },
+            { $set: { "device.name": name + count } }
+          );
+          console.log(
+            `count at i: ${i} count:${count} lenght:${
+              sameNameDevices.length - 1
+            }`
+          );
+          count++;
+        }
+      }
+    }
+    await Promise.all([
+      Device.deleteOne({ homeId: homeId, _id: selectedDeviceId }),
+      Home.updateOne(
+        { _id: homeId },
+        { $pull: { devices: { _id: selectedDeviceId } } }
+      ),
+      Prediction.deleteMany({
+        "device.id": selectedDeviceId,
+        "device.homeId": homeId,
+      }),
+      Sequential.deleteMany({ device_id: selectedDeviceId }),
+    ]);
+    return device;
+  }),
+  deleteRoom: wrapper(async (homeId, Name) => {
+    const room = await Room.findOne({ homeId: homeId, name: Name });
+    if (!room) {
+      throw new Error("room not found");
+    }
+    await Promise.all([
+      Room.deleteOne({ _id: room._id }),
+      Home.updateOne({ _id: homeId }, { $pull: { rooms: { _id: room._id } } }),
+      Prediction.deleteMany({ "device.homeId": homeId, roomName: room.name }),
+      Sequential.deleteMany({ home_id: homeId, roomName: room.name }),
+    ]);
+    return room;
+  }),
 };
 module.exports = adminService;

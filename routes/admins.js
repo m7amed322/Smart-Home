@@ -3,6 +3,7 @@ const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
 const router = express.Router();
 const adminController = require("../controllers/admins");
+const adminService = require("../Services/admin");
 router.get("/request", [auth, admin], adminController.getRequest);
 router.post("/login", adminController.logIn);
 router.get("/homes", [auth, admin], adminController.getHome);
@@ -18,7 +19,11 @@ router.post("/forgot", adminController.forgotPassword);
 router.patch("/reset/:token", adminController.resetPassword); 
 router.get("/me",[auth,admin],adminController.getMe);
 router.post("/home",[auth,admin],adminController.createHome);
-router.post("/user",[auth,admin],adminController.createAcc)
+router.post("/user",[auth,admin],adminController.createAcc);
+router.delete("/device",[auth,admin],adminController.deleteDevice);
+router.delete("/room",[auth,admin],adminController.deleteRoom)
+router.post("/device",[auth,admin],adminController.addDevice);
+router.post("/room",[auth,admin],adminController.addRoom);
 // create admin
 // router.post("/",adminController.createAdmin)
 module.exports = router;

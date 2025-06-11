@@ -8,6 +8,7 @@ const Support = require("../models/support");
 const { Room } = require("../models/rooms");
 const Request = require("../models/request");
 const { wrapper } = require("../utils/helper");
+const {User} = require("../models/user.js");
 const predict = require("../utils/consumptionPrediction.js");
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",

@@ -1,6 +1,7 @@
 const adminValidation = require("../validations/admin.js");
 const accountValidation = require("../validations/account.js");
 const adminService = require("../Services/admin.js");
+const { roomSchema } = require("../models/rooms.js");
 module.exports = {
   getRequest: async (req, res, next) => {
     const requests = await adminService.getRequest();
@@ -117,13 +118,36 @@ module.exports = {
     const user = await adminService.createAcc(req.body.requestId);
     res.json({ user, "user email": user.email, "user password": user.email });
   },
+  deleteDevice:async(req,res,next)=>{
+    const device = await adminService.deleteDevice(req.body.homeId,req.body.name);
+    res.json({
+      message:"device deleted successfully",
+      device
+    });
+  },
+  addDevice:async(req,res,next)=>{
+    const device =await adminService.createDevice(req.body.name,req.body.homeId);
+    res.json({
+      message:`device ${device.name} added successfuly`,
+      device
+    })
+  },
+  addRoom:async(req,res,next)=>{
+    const room = await adminService.createRoom(req.body.name,req.body.homeId,req.body.ledNumber);
+    res.json({
+      message:`room ${room.name} added successfuly`,
+      room
+    })
+  },
+  deleteRoom:async(req,res,next)=>{
+    const room = await adminService.deleteRoom(req.body.homeId,req.body.name);
+    res.json({
+      message:"room deleted successfully",
+      room
+    });
+  }
 
   // createAdmin:async (req,res)=>{
-  //   const {error} = validateAdmin(req.body)
-  //   if(error){
-  //     res.status(400).json(error.details[0].message)
-  //     return;
-  //   }
   //   let admin = await Admin.findOne({email:req.body.email});
   //   if(admin){
   //     res.status(400).json("already registered");
