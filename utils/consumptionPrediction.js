@@ -1,10 +1,20 @@
-//where i will prepare the function that call the model api 
-const _ = require("lodash");
-function getRandom(min, max) {
-  const random = Math.random() * (max - min) + min;
-  return Number(random.toFixed(2));
+ const axios = require("axios");
+ const _ = require("lodash");
+ const winston = require("winston");
+ async function postData(sequence) {
+  try {
+    const response = await axios.post(
+      "http://satisfied-randie-smart-home-energy-consumption-5c3419ef.koyeb.app/predict",
+      {
+        input_data: sequence,
+      }
+    );
+    return response.data
+  } catch (error) {
+    return error
+  }
 }
- const predict= (sequence) => {
+ const predict= async (sequence) => {
     if (sequence.length == 12) {
       keys = Object.keys(sequence[0]);
       if (
@@ -16,12 +26,13 @@ function getRandom(min, max) {
           "home_id",
         ])
       ) {
-        return getRandom(1, 3);
+        const predicted = await postData(sequence)
+        return predicted.energy_consumption_6_hours_ahead_kWh;
       } else {
-        console.log("error in keys");
+        winston.info("error in keys");
       }
     } else {
-      console.log("error in lenght");
+      winston.info("error in lenght");
     }
 };
 module.exports = predict;
