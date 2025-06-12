@@ -467,7 +467,7 @@ const mqttServices = {
           prediction.after_3hour = prediction.after_4hour;
           prediction.after_4hour = prediction.after_5hour;
           prediction.after_5hour = prediction.after_6hour;
-          prediction.after_6hour = predValue;
+          prediction.after_6hour = parseInt(predValue);
           await prediction.save();
           await Home.updateOne(
             {
