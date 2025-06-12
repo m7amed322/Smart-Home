@@ -422,5 +422,48 @@ const adminService = {
     ]);
     return room;
   }),
+  changePassword: async (newPass, currentPass, adminId) => {
+    const admin = await Admin.findOne({ _id: adminId });
+    if (!admin) {
+      throw new Error("admin not found");
+    }
+    if (newPass) {
+      if (!currentPass) {
+        throw new Error("current password is required");
+      }
+      const pass = await bcrypt.compare(currentPass, admin.password);
+      if (!pass) {
+        throw new Error("invalid password");
+      }
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(newPass, salt);
+      admin.passwordChangeAt = new Date();
+      admin.isActive = true;
+      await admin.save();
+    }
+    return admin;
+  },
+  updateMe: async (adminId, fullName, email, adminProfilePic) => {
+    let admin = await Admin.findOne({ _id: adminId });
+    if (!admin) {
+      throw new Error("admin not found");
+    }
+    if (adminProfilePic) {
+      admin.adminProfilePic =
+        "https://broken-paulina-smarthomee-b125f114.koyeb.app/api/" +
+        adminProfilePic.path.replace("uploads\\", "");
+    }
+    await Admin.updateOne(
+      { _id: adminId },
+      {
+        $set: {
+          fullName: fullName || admin.fullName,
+          email: email || admin.email,
+        },
+      }
+    );
+    await admin.save();
+    return admin;
+  },
 };
 module.exports = adminService;

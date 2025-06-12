@@ -118,32 +118,68 @@ module.exports = {
     const user = await adminService.createAcc(req.body.requestId);
     res.json({ user, "user email": user.email, "user password": user.email });
   },
-  deleteDevice:async(req,res,next)=>{
-    const device = await adminService.deleteDevice(req.body.homeId,req.body.name);
+  deleteDevice: async (req, res, next) => {
+    const device = await adminService.deleteDevice(
+      req.body.homeId,
+      req.body.name
+    );
     res.json({
-      message:"device deleted successfully",
-      device
+      message: "device deleted successfully",
+      device,
     });
   },
-  addDevice:async(req,res,next)=>{
-    const device =await adminService.createDevice(req.body.name,req.body.homeId);
+  addDevice: async (req, res, next) => {
+    const device = await adminService.createDevice(
+      req.body.name,
+      req.body.homeId
+    );
     res.json({
-      message:`device ${device.name} added successfuly`,
-      device
-    })
+      message: `device ${device.name} added successfuly`,
+      device,
+    });
   },
-  addRoom:async(req,res,next)=>{
-    const room = await adminService.createRoom(req.body.name,req.body.homeId,req.body.ledNumber);
+  addRoom: async (req, res, next) => {
+    const room = await adminService.createRoom(
+      req.body.name,
+      req.body.homeId,
+      req.body.ledNumber
+    );
     res.json({
-      message:`room ${room.name} added successfuly`,
-      room
-    })
+      message: `room ${room.name} added successfuly`,
+      room,
+    });
   },
-  deleteRoom:async(req,res,next)=>{
-    const room = await adminService.deleteRoom(req.body.homeId,req.body.name);
+  deleteRoom: async (req, res, next) => {
+    const room = await adminService.deleteRoom(req.body.homeId, req.body.name);
     res.json({
-      message:"room deleted successfully",
-      room
+      message: "room deleted successfully",
+      room,
+    });
+  },
+  changePassword: async (req, res, next) => {
+    const admin = await adminService.changePassword(
+      req.body.newPass,
+      req.body.currentPass,
+      req.tokenPayload.id
+    );
+    res.json({
+      admin,
+    });
+  },
+  updateMe:async(req,res,next)=>{
+    const { error } = adminValidation.update(req.body);
+    if (error) {
+      return next(error.details[0]);
+    }
+    const admin = await adminService.updateMe(
+      req.tokenPayload.id,
+      req.body.fullName,
+      req.body.email,
+      req.file,
+    );
+    res.json({
+      admin,
+      message: "admin updated successfully",
     });
   }
 

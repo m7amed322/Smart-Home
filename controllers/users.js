@@ -217,8 +217,6 @@ module.exports = {
       req.body.email,
       req.body.phoneNumber,
       req.file,
-      req.body.currentPass,
-      req.body.newPass
     );
     res.json({
       user,

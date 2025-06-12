@@ -1,6 +1,7 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
+const upload = require("../middleware/upload");
 const router = express.Router();
 const adminController = require("../controllers/admins");
 const adminService = require("../Services/admin");
@@ -24,6 +25,8 @@ router.delete("/device",[auth,admin],adminController.deleteDevice);
 router.delete("/room",[auth,admin],adminController.deleteRoom)
 router.post("/device",[auth,admin],adminController.addDevice);
 router.post("/room",[auth,admin],adminController.addRoom);
+router.patch("/me",[auth,admin],upload.single('profilePic'),adminController.updateMe);
+router.patch("/password",[auth,admin],adminController.changePassword)
 // create admin
 // router.post("/",adminController.createAdmin)
 module.exports = router;

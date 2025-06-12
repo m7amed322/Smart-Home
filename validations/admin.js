@@ -24,5 +24,12 @@ const adminValidation = {
     });
     return schema.validate(home);
   },
+  update:(adminData)=>{
+    const schema = joi.object({
+          fullName: joi.string().min(3).max(255),
+          email: joi.string().email().min(3).max(255),
+        });
+        return schema.validate(adminData);
+  }
 };
 module.exports = adminValidation;

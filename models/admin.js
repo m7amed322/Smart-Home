@@ -18,6 +18,7 @@ const adminSchema = new mongoose.Schema({
   passwordResetToken: String,
   passwordResetTokenExpires: Date,
   passwordChangeAt: Date,
+  adminProfilePic: String,
 });
 adminSchema.methods.genToken = function () {
   token = jwt.sign(
