@@ -254,4 +254,20 @@ module.exports = {
       user,
     });
   },
+  monthlyData: async (req, res, next) => {
+    const result = await mqttServices.monthlyData(
+      req.tokenPayload.homeId
+    );
+    res.json({
+      result,
+    });
+  },
+  weeklyData: async (req, res, next) => {
+    const result = await mqttServices.weeklyData(
+      req.body.homeId
+    );
+    res.json({
+      result,
+    });
+  }
 };

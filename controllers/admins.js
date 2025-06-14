@@ -181,7 +181,13 @@ module.exports = {
       admin,
       message: "admin updated successfully",
     });
-  }
+  },
+  logout: async (req, res, next) => {
+      const email = await adminService.logout(req.tokenPayload.id);
+      res.status(200).json({
+        message: `admin: ${email} is logged out`,
+      });
+    }
 
   // createAdmin:async (req,res)=>{
   //   let admin = await Admin.findOne({email:req.body.email});

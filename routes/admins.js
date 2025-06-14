@@ -27,6 +27,8 @@ router.post("/device",[auth,admin],adminController.addDevice);
 router.post("/room",[auth,admin],adminController.addRoom);
 router.patch("/me",[auth,admin],upload.single('profilePic'),adminController.updateMe);
 router.patch("/password",[auth,admin],adminController.changePassword)
+router.post("/logout", [auth,admin], adminController.logout);
+
 // create admin
 // router.post("/",adminController.createAdmin)
 module.exports = router;

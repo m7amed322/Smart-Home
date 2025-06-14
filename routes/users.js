@@ -29,4 +29,7 @@ router.patch("/me",auth,upload.single('profilePic'),userController.updateMe);
 router.patch("/password",auth,userController.changePassword)
 router.post("/control",auth,userController.controlLed);
 router.get("/ledState/:roomName",auth,userController.ledsState);
+router.get("/monthly-data",auth,userController.monthlyData);
+router.get("/weekly-data",auth,userController.weeklyData);
+
 module.exports = router;

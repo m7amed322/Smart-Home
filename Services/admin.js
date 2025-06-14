@@ -465,5 +465,15 @@ const adminService = {
     await admin.save();
     return admin;
   },
+  logout: wrapper(async (adminId) => {
+      const admin = await Admin.findOne({ _id: adminId });
+      if (!admin) {
+        throw new Error("access denied");
+      }
+      admin.jwt = undefined;
+      admin.jwtExpires = undefined;
+      await admin.save();
+      return admin.email;
+    })
 };
 module.exports = adminService;

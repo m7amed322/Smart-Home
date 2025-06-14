@@ -1,14 +1,15 @@
 const winston = require("winston");
+const { getISOWeek, getISOWeekYear } = require("date-fns");
 const { Sequential } = require("../models/sequentials");
 const { Device } = require("../models/devices");
 const { Prediction } = require("../models/predictions");
 const Home = require("../models/home");
-const _ = require("lodash");
 const Support = require("../models/support");
 const { Room } = require("../models/rooms");
 const Request = require("../models/request");
 const { wrapper } = require("../utils/helper");
-const {User} = require("../models/user.js");
+const { User } = require("../models/user.js");
+const _ = require("lodash");
 const predict = require("../utils/consumptionPrediction.js");
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
@@ -97,7 +98,7 @@ const mqttServices = {
         const homeId = parts[0];
         const deviceName = parts[1];
         const data = JSON.parse(payload);
-        const duration = parseFloat(data.duration)/60;
+        const duration = parseFloat(data.duration) / 60;
         const energyConsumption = parseFloat(data.energyConsumption);
         if (!deviceDataList[homeId]) {
           deviceDataList[homeId] = [];
@@ -188,6 +189,13 @@ const mqttServices = {
             await Device.updateOne({ homeId, name: deviceName }, update, {
               upsert: false,
             });
+            await Home.updateOne(
+              { _id: homeId },
+              {
+                $inc: { totalEnergyConsumption: device.data.energyConsumption },
+                $set: { totalEnergyConsumptionDate: new Date() },
+              }
+            );
           }
         }
       }
@@ -387,7 +395,7 @@ const mqttServices = {
           throw new Error("device of this home not found ");
         }
         let deviceNameInSeq = seqData.deviceName;
-       if (/.*\d$/.test(seqData.deviceName)) {
+        if (/.*\d$/.test(seqData.deviceName)) {
           deviceNameInSeq = seqData.deviceName.slice(
             0,
             seqData.deviceName.length - 1
@@ -603,6 +611,157 @@ const mqttServices = {
     deviceDataList = {};
     TemperatureList = {};
     ledStateList = {};
+  },
+  async monthlyData(homeId) {
+    try {
+      const home = await Home.findOne({ _id: homeId });
+      if (!home) {
+        throw new Error("Home not found");
+      }
+      const currentDate = new Date();
+      const lastMonthlyDate = home.monthlyDate
+        ? new Date(home.monthlyDate)
+        : new Date(0);
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+      const lastYear = lastMonthlyDate.getFullYear();
+      const lastMonth = lastMonthlyDate.getMonth();
+
+      if (
+        !home.monthlySummary ||
+        currentYear > lastYear ||
+        (currentYear === lastYear && currentMonth > lastMonth)
+      ) {
+        const deviceIds = home.devices.map((device) => device._id.toString());
+        const ledIds = home.rooms.flatMap((room) =>
+          room.led.map((led) => led._id.toString())
+        );
+        const predictions = await Prediction.find({
+          $or: [
+            { "device.id": { $in: deviceIds } },
+            { "device.id": { $in: ledIds } },
+          ],
+          "device.homeId": homeId,
+        }).select("device.id roomName after_6hour");
+        const predictionMap = new Map();
+        predictions.forEach((pred) => {
+          predictionMap.set(pred.device.id, pred.after_6hour || 0);
+        });
+        const monthlySummary = {
+          generatedAt: currentDate,
+          data: {
+            devices: home.devices.map((device) => ({
+              name: device.name,
+              energyConsumption: device.energyConsumption || 0,
+              _id: device._id,
+              after_6hour: predictionMap.get(device._id.toString()) || 0,
+            })),
+            leds: home.rooms.map((room) => ({
+              name: room.name,
+              _id: room._id,
+              led: room.led.map((led) => ({
+                name: led.name,
+                energyConsumption: led.energyConsumption || 0,
+                _id: led._id,
+                after_6hour: predictionMap.get(led._id.toString()) || 0,
+              })),
+            })),
+            totalEnergyConsumption: home.totalEnergyConsumption || 0,
+          },
+        };
+        home.monthlyDate = currentDate;
+        home.monthlySummary = monthlySummary;
+        await home.save();
+        return {
+          message: "Monthly data generated successfully",
+          data: monthlySummary,
+        };
+      } else {
+        return {
+          message:
+            "No new monthly data needed. Last update was in the same month.",
+          data: home.monthlySummary || null,
+        };
+      }
+    } catch (error) {
+      throw new Error(`Error generating monthly data: ${error.message}`);
+    }
+  },
+
+  async weeklyData(homeId) {
+    try {
+      const home = await Home.findOne({ _id: homeId });
+      if (!home) {
+        throw new Error("Home not found");
+      }
+      const currentDate = new Date();
+      const lastWeeklyDate = home.weeklyDate
+        ? new Date(home.weeklyDate)
+        : new Date(0);
+      const currentYear = getISOWeekYear(currentDate);
+      const currentWeek = getISOWeek(currentDate);
+      const lastYear = getISOWeekYear(lastWeeklyDate);
+      const lastWeek = getISOWeek(lastWeeklyDate);
+      if (
+        !home.weeklySummary ||
+        currentYear > lastYear ||
+        (currentYear === lastYear && currentWeek > lastWeek)
+      ) {
+        const deviceIds = home.devices.map((device) => device._id.toString());
+        const ledIds = home.rooms.flatMap((room) =>
+          room.led.map((led) => led._id.toString())
+        );
+        const predictions = await Prediction.find({
+          $or: [
+            { "device.id": { $in: deviceIds } },
+            { "device.id": { $in: ledIds } },
+          ],
+          "device.homeId": homeId,
+        }).select("device.id roomName after_6hour");
+        const predictionMap = new Map();
+        predictions.forEach((pred) => {
+          predictionMap.set(pred.device.id, pred.after_6hour || 0);
+        });
+        const weeklySummary = {
+          generatedAt: currentDate,
+          data: {
+            devices: home.devices.map((device) => ({
+              name: device.name,
+              energyConsumption: device.energyConsumption || 0,
+              _id: device._id,
+              after_6hour: predictionMap.get(device._id.toString()) || 0,
+            })),
+            leds: home.rooms.map((room) => ({
+              name: room.name,
+              _id: room._id,
+              led: room.led.map((led) => ({
+                name: led.name,
+                energyConsumption: led.energyConsumption || 0,
+                _id: led._id,
+                after_6hour: predictionMap.get(led._id.toString()) || 0,
+              })),
+            })),
+            totalEnergyConsumption: home.totalEnergyConsumption || 0,
+          },
+        };
+        home.weeklyDate = currentDate;
+        home.weeklySummary = weeklySummary;
+        await home.save();
+
+        return {
+          message: "Weekly data generated successfully",
+          data: weeklySummary,
+        };
+      } else {
+        return {
+          message:
+            "No new weekly data needed. Last update was in the same week.",
+          data: home.weeklySummary || null,
+        };
+      }
+    } catch (error) {
+      throw new Error(`Error generating weekly data: ${error.message}`);
+    }
   },
 };
 module.exports = mqttServices;

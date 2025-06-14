@@ -1,7 +1,8 @@
 const mqtt = require("mqtt");
 const mqttServices = require("../Services/mqtt");
-const winston = require("winston")
-module.exports = function (io) {
+const Home = require("../models/home");
+const winston = require("winston");
+module.exports = async function (io) {
   mqttServices.connect(mqtt);
   setInterval(async () => {
     try {
@@ -14,4 +15,5 @@ module.exports = function (io) {
       winston.error("Error in scheduled tasks:", err);
     }
   }, 90000);
+
 };
