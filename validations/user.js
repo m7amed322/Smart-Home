@@ -33,6 +33,16 @@ const userValidation = {
       phoneNumber:joi.string().min(5).max(15),
     });
     return schema.validate(userData);
-  }
+  },
+  update2:(userData)=>{
+    const schema = joi.object({
+      userId:joi.objectId().required(),
+      fullName: joi.string().min(3).max(255),
+      email: joi.string().email().min(3).max(255),
+      phoneNumber:joi.string().min(5).max(15),
+      householdSize:joi.number()
+    });
+    return schema.validate(userData);
+  },
 };
 module.exports = userValidation;

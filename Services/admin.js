@@ -474,6 +474,51 @@ const adminService = {
       admin.jwtExpires = undefined;
       await admin.save();
       return admin.email;
-    })
+    }),
+    updateUser:wrapper(
+    async (userId, fullName, email, phoneNumber,householdSize) => {
+      let user = await User.findOne({ _id: userId });
+      const oldEmail = user.email;
+      const home = await Home.findOne({userEmail:oldEmail});
+      if (!user) {
+        throw new Error("user not found");
+      }
+      await Promise.all([
+        User.updateOne(
+          { _id: userId },
+          {
+            $set: {
+              fullName: fullName || user.fullName,
+              email: email || user.email,
+              phoneNumber: phoneNumber || user.phoneNumber,
+            },
+          }
+        ),
+        Home.updateOne(
+          { userEmail: oldEmail },
+          {
+            $set: {
+              userEmail: email || user.email,
+              userFullName: fullName || user.fullName,
+              householdSize:householdSize || home.householdSize
+            },
+          }
+        ),
+        user.save(),
+      ]);
+      user = await User.findOne({ _id: userId });
+      const request = await Request.findOne({ email: oldEmail });
+      const support = await Support.findOne({ "user._id": userId });
+      request.fullName = user.fullName;
+      request.email = user.email;
+      request.profilePic = user.userProfilePic;
+      if (support) {
+        support.user = user;
+        await support.save();
+      }
+      await request.save();
+      return user;
+    }
+  )
 };
 module.exports = adminService;

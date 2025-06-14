@@ -28,6 +28,7 @@ router.post("/room",[auth,admin],adminController.addRoom);
 router.patch("/me",[auth,admin],upload.single('profilePic'),adminController.updateMe);
 router.patch("/password",[auth,admin],adminController.changePassword)
 router.post("/logout", [auth,admin], adminController.logout);
+router.patch("/update-user",[auth,admin],adminController.updateUser);
 
 // create admin
 // router.post("/",adminController.createAdmin)

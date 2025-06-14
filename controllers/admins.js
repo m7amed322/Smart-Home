@@ -2,6 +2,7 @@ const adminValidation = require("../validations/admin.js");
 const accountValidation = require("../validations/account.js");
 const adminService = require("../Services/admin.js");
 const { roomSchema } = require("../models/rooms.js");
+const userValidation = require("../validations/user.js")
 module.exports = {
   getRequest: async (req, res, next) => {
     const requests = await adminService.getRequest();
@@ -166,7 +167,7 @@ module.exports = {
       admin,
     });
   },
-  updateMe:async(req,res,next)=>{
+  updateMe: async (req, res, next) => {
     const { error } = adminValidation.update(req.body);
     if (error) {
       return next(error.details[0]);
@@ -175,7 +176,7 @@ module.exports = {
       req.tokenPayload.id,
       req.body.fullName,
       req.body.email,
-      req.file,
+      req.file
     );
     res.json({
       admin,
@@ -183,11 +184,28 @@ module.exports = {
     });
   },
   logout: async (req, res, next) => {
-      const email = await adminService.logout(req.tokenPayload.id);
-      res.status(200).json({
-        message: `admin: ${email} is logged out`,
-      });
+    const email = await adminService.logout(req.tokenPayload.id);
+    res.status(200).json({
+      message: `admin: ${email} is logged out`,
+    });
+  },
+  updateUser: async (req, res, next) => {
+    const { error } = userValidation.update2(req.body);
+    if (error) {
+      return next(error.details[0]);
     }
+    const user = await adminService.updateUser(
+      req.body.userId,
+      req.body.fullName,
+      req.body.email,
+      req.body.phoneNumber,
+      req.body.householdSize
+    );
+    res.json({
+      user,
+      message: "user updated successfully",
+    });
+  },
 
   // createAdmin:async (req,res)=>{
   //   let admin = await Admin.findOne({email:req.body.email});
