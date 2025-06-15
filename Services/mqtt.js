@@ -524,6 +524,7 @@ const mqttServices = {
               ])
             )
           ));
+          console.log(predValue);
           const prediction = await Prediction.findOne({
             "device.name": device.name,
             "device.homeId": device.homeId,
