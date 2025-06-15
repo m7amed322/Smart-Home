@@ -16,7 +16,7 @@ const homeSchema = new mongoose.Schema({
   monthlyDate: { type: Date, default: new Date() },
   monthlySummary: { type: Object, default: null },
   weeklyDate: { type: Date, default: new Date() },
-  weeklySummary:{type:Date,default:new Date()}
+  weeklySummary: { type: Object, default: new Date() },
 });
 
 const Home = mongoose.model("home", homeSchema);
