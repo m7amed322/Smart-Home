@@ -40,7 +40,8 @@ const userValidation = {
       fullName: joi.string().min(3).max(255),
       email: joi.string().email().min(3).max(255),
       phoneNumber:joi.string().min(5).max(15),
-      householdSize:joi.number()
+      householdSize:joi.number(),
+      homeAddress:joi.string().min(3).max(255)
     });
     return schema.validate(userData);
   },
