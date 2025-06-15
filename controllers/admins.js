@@ -199,7 +199,8 @@ module.exports = {
       req.body.fullName,
       req.body.email,
       req.body.phoneNumber,
-      req.body.householdSize
+      req.body.householdSize,
+      req.body.homeAddress
     );
     res.json({
       user,
