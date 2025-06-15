@@ -525,6 +525,15 @@ const mqttServices = {
             )
           );
           console.log(predValue);
+          console.log( _.map(device.seqs, (obj) =>
+              _.pick(obj, [
+                "occupancy_status",
+                "temperature_setting_C",
+                "usage_duration_minutes",
+                "appliance",
+                "home_id",
+              ])
+            ));
           const prediction = await Prediction.findOne({
             "device.name": device.name,
             "device.homeId": device.homeId,
