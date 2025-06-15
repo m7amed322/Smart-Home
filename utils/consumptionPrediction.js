@@ -27,7 +27,7 @@
         ])
       ) {
         const predicted = await postData(sequence)
-        return predicted.energy_consumption_6_hours_ahead_kWh;
+        return predicted;
       } else {
         winston.info("error in keys");
       }
