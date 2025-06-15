@@ -476,7 +476,7 @@ const adminService = {
       return admin.email;
     }),
     updateUser:wrapper(
-    async (userId, fullName, email, phoneNumber,householdSize) => {
+    async (userId, fullName, email, phoneNumber,householdSize,homeAddress) => {
       let user = await User.findOne({ _id: userId });
       const oldEmail = user.email;
       const home = await Home.findOne({userEmail:oldEmail});
@@ -500,7 +500,8 @@ const adminService = {
             $set: {
               userEmail: email || user.email,
               userFullName: fullName || user.fullName,
-              householdSize:householdSize || home.householdSize
+              householdSize:householdSize || home.householdSize,
+              address:homeAddress || home.address
             },
           }
         ),
@@ -512,6 +513,7 @@ const adminService = {
       request.fullName = user.fullName;
       request.email = user.email;
       request.profilePic = user.userProfilePic;
+      request.homeAddress= homeAddress || request.homeAddress;
       if (support) {
         support.user = user;
         await support.save();
