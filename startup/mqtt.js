@@ -7,13 +7,14 @@ module.exports = async function (io) {
   setInterval(async () => {
     try {
       await mqttServices.processSeq(io);
+
       setTimeout(async () => {
         await mqttServices.storeData();
         mqttServices.resetLists();
-      }, 45000);
+      }, 22500);
     } catch (err) {
       winston.error("Error in scheduled tasks:", err);
     }
-  }, 90000);
+  }, 45000);
 
 };
