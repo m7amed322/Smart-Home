@@ -513,7 +513,7 @@ const mqttServices = {
       try {
         if (device.seqs.length == 12) {
           // rather predFun as a parameter it will be the axios function that call the api
-          const predValue = parseInt(predFun(
+          const predValue = predFun(
             _.map(device.seqs, (obj) =>
               _.pick(obj, [
                 "occupancy_status",
@@ -523,7 +523,7 @@ const mqttServices = {
                 "home_id",
               ])
             )
-          ));
+          );
           console.log(predValue);
           const prediction = await Prediction.findOne({
             "device.name": device.name,
