@@ -41,8 +41,8 @@ const mqttServices = {
     });
     ///////////////////////////////////////////
     this.mqttClient.on("message", (topic, message) => {
-      console.log(topic,message)
       const payload = message.toString();
+      console.log(topic,payload)
       if (topic.includes("/temp")) {
         const slashIndex = _.indexOf(topic, "/");
         const homeId = topic.slice(0, slashIndex);
