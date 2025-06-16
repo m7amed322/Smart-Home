@@ -403,7 +403,7 @@ const mqttServices = {
           );
         }
         const seq = new Sequential({
-          home_id: 14,
+          home_id: homeId,
           appliance: deviceNameInSeq,
           temperature_setting_C: seqData.temp,
           occupancy_status: seqData.occuped,
