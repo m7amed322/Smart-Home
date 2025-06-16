@@ -216,7 +216,7 @@ const userService = {
             usageDurationInMin: -1,
           }
         );
-    const home = await Home.find({_id:homeId});
+    const home = await Home.findOne({_id:homeId});
     const temp = home.temp
     return {devices,temp};
   }
