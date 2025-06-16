@@ -271,11 +271,12 @@ module.exports = {
     });
   },
   devicesData:async (req, res, next) => {
-    const result = await userService.devicesData(
+    const {result,temp} = await userService.devicesData(
       req.tokenPayload.homeId
     );
     res.json({
       result,
+      temp
     });
   },
 };
