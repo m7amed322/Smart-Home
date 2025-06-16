@@ -12,7 +12,7 @@ const { User } = require("../models/user.js");
 const _ = require("lodash");
 const predict = require("../utils/consumptionPrediction.js");
 const { streamTemp } = require("./alert.js");
-const AlertService = require("../Services/alert.js")
+const AlertService = require("../Services/alert.js");
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
   port: 8883,
@@ -555,7 +555,9 @@ const mqttServices = {
             console.log(predValue);
             alert = await AlertService.createAlert(
               user._id,
-              `from the device: ${device.name} the predicted value after 6 hours: ${predValue.toFixed(2)} `,
+              `from the device: ${
+                device.name
+              } the predicted value after 6 hours: ${predValue.toFixed(2)} `,
               io
             );
           }
@@ -652,17 +654,7 @@ const mqttServices = {
         predictions.forEach((pred) => {
           predictionMap.set(pred.device.id, pred.after_6hour || 0);
         });
-        const devices = await Device.find(
-          { homeId: home._id },
-          {
-            seqs: 1,
-            preds: 1,
-            _id: 1,
-            homeId: 1,
-            energyConsumptionDate: 1,
-            usageDurationInMin: 1,
-          }
-        );
+        const devices = await Device.find({ homeId: home._id });
         const monthlySummary = {
           generatedAt: currentDate,
           data: {
@@ -734,17 +726,7 @@ const mqttServices = {
         predictions.forEach((pred) => {
           predictionMap.set(pred.device.id, pred.after_6hour || 0);
         });
-        const devices = await Device.find(
-          { homeId: home._id },
-          {
-            seqs: 1,
-            preds: 1,
-            _id: 1,
-            homeId: 1,
-            energyConsumptionDate: 1,
-            usageDurationInMin: 1,
-          }
-        );
+        const devices = await Device.find({ homeId: home._id });
         const weeklySummary = {
           generatedAt: currentDate,
           data: {
@@ -781,9 +763,9 @@ const mqttServices = {
       throw new Error(`Error generating weekly data: ${error.message}`);
     }
   },
-  streamTemp(io=null) {
+  streamTemp(io = null) {
     for (const homeId in TemperatureList) {
-      streamTemp(homeId, TemperatureList[homeId],io);
+      streamTemp(homeId, TemperatureList[homeId], io);
     }
   },
 };
