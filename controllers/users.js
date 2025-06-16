@@ -264,10 +264,18 @@ module.exports = {
   },
   weeklyData: async (req, res, next) => {
     const result = await mqttServices.weeklyData(
-      req.body.homeId
+      req.tokenPayload.homeId
     );
     res.json({
       result,
     });
-  }
+  },
+  devicesData:async (req, res, next) => {
+    const result = await userService.devicesData(
+      req.tokenPayload.homeId
+    );
+    res.json({
+      result,
+    });
+  },
 };

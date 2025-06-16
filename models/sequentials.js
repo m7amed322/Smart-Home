@@ -24,7 +24,7 @@ const sequentialSchema = new mongoose.Schema({
     default: null,
   },
   appliance: { type: String, required: true },
-  home_id: { type: String, required: true },
+  home_id: { type: Number, required: true },
   device_id: { type: String, required: true },
   roomName: {
     type: String,

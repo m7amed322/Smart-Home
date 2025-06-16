@@ -14,6 +14,7 @@ const AlertService = {
     }
     return alert;
   }),
+
   getUnread: wrapper(async (userId) => {
     const alerts = await Alert.find({ userId:userId, read: false });
     if (!alerts) {

@@ -42,7 +42,7 @@ const mqttServices = {
     ///////////////////////////////////////////
     this.mqttClient.on("message", (topic, message) => {
       const payload = message.toString();
-      console.log(topic,payload)
+      console.log(topic, payload);
       if (topic.includes("/temp")) {
         const slashIndex = _.indexOf(topic, "/");
         const homeId = topic.slice(0, slashIndex);
@@ -311,7 +311,7 @@ const mqttServices = {
         }
 
         const seq = new Sequential({
-          home_id: homeId,
+          home_id: 14,
           appliance: deviceNameInSeq,
           temperature_setting_C: seqData.temp,
           occupancy_status: seqData.occuped,
@@ -403,7 +403,7 @@ const mqttServices = {
           );
         }
         const seq = new Sequential({
-          home_id: homeId,
+          home_id: 14,
           appliance: deviceNameInSeq,
           temperature_setting_C: seqData.temp,
           occupancy_status: seqData.occuped,
@@ -525,7 +525,8 @@ const mqttServices = {
             )
           );
           console.log(predValue);
-          console.log( _.map(device.seqs, (obj) =>
+          console.log(
+            _.map(device.seqs, (obj) =>
               _.pick(obj, [
                 "occupancy_status",
                 "temperature_setting_C",
@@ -533,7 +534,8 @@ const mqttServices = {
                 "appliance",
                 "home_id",
               ])
-            ));
+            )
+          );
           const prediction = await Prediction.findOne({
             "device.name": device.name,
             "device.homeId": device.homeId,
@@ -658,15 +660,21 @@ const mqttServices = {
         predictions.forEach((pred) => {
           predictionMap.set(pred.device.id, pred.after_6hour || 0);
         });
+        const devices = await Device.find(
+          { homeId: home._id },
+          {
+            seqs: -1,
+            preds: -1,
+            _id: -1,
+            homeId: -1,
+            energyConsumptionDate: -1,
+            usageDurationInMin: -1,
+          }
+        );
         const monthlySummary = {
           generatedAt: currentDate,
           data: {
-            devices: home.devices.map((device) => ({
-              name: device.name,
-              energyConsumption: device.energyConsumption || 0,
-              _id: device._id,
-              after_6hour: predictionMap.get(device._id.toString()) || 0,
-            })),
+            devices: devices,
             leds: home.rooms.map((room) => ({
               name: room.name,
               _id: room._id,
@@ -702,6 +710,7 @@ const mqttServices = {
   async weeklyData(homeId) {
     try {
       const home = await Home.findOne({ _id: homeId });
+
       if (!home) {
         throw new Error("Home not found");
       }
@@ -733,15 +742,21 @@ const mqttServices = {
         predictions.forEach((pred) => {
           predictionMap.set(pred.device.id, pred.after_6hour || 0);
         });
+        const devices = await Device.find(
+          { homeId: home._id },
+          {
+            seqs: -1,
+            preds: -1,
+            _id: -1,
+            homeId: -1,
+            energyConsumptionDate: -1,
+            usageDurationInMin: -1,
+          }
+        );
         const weeklySummary = {
           generatedAt: currentDate,
           data: {
-            devices: home.devices.map((device) => ({
-              name: device.name,
-              energyConsumption: device.energyConsumption || 0,
-              _id: device._id,
-              after_6hour: predictionMap.get(device._id.toString()) || 0,
-            })),
+            devices: devices,
             leds: home.rooms.map((room) => ({
               name: room.name,
               _id: room._id,

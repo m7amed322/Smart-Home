@@ -205,5 +205,20 @@ const userService = {
     }
     return user;
   },
+  devicesData:async(homeId)=>{
+    const devices = await Device.find(
+          { homeId: homeId },
+          {
+            seqs: -1,
+            _id: -1,
+            homeId: -1,
+            energyConsumptionDate: -1,
+            usageDurationInMin: -1,
+          }
+        );
+    const home = await Home.find({_id:homeId});
+    const temp = home.temp
+    return {devices,temp};
+  }
 };
 module.exports = userService;

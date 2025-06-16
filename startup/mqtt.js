@@ -8,9 +8,11 @@ module.exports = async function (io) {
     try {
       await mqttServices.processSeq(io);
       console.log("creating sequential");
-      console.log("storing data and reseting lists");
-      await mqttServices.storeData();
-      mqttServices.resetLists();
+      setTimeout(async ()=>{
+        console.log("storing data and reseting lists");
+        await mqttServices.storeData();
+        mqttServices.resetLists();
+      },5000)
     } catch (err) {
       winston.error("Error in scheduled tasks:", err);
     }

@@ -31,5 +31,6 @@ router.post("/control",auth,userController.controlLed);
 router.get("/ledState/:roomName",auth,userController.ledsState);
 router.get("/monthly-data",auth,userController.monthlyData);
 router.get("/weekly-data",auth,userController.weeklyData);
+router.get("/devices-data",auth,userController.devicesData);
 
 module.exports = router;
