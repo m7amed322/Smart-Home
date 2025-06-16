@@ -311,7 +311,7 @@ const mqttServices = {
         }
 
         const seq = new Sequential({
-          home_id: 14,
+          home_id: homeId,
           appliance: deviceNameInSeq,
           temperature_setting_C: seqData.temp,
           occupancy_status: seqData.occuped,
@@ -524,18 +524,6 @@ const mqttServices = {
               ])
             )
           );
-          console.log(predValue);
-          console.log(
-            _.map(device.seqs, (obj) =>
-              _.pick(obj, [
-                "occupancy_status",
-                "temperature_setting_C",
-                "usage_duration_minutes",
-                "appliance",
-                "home_id",
-              ])
-            )
-          );
           const prediction = await Prediction.findOne({
             "device.name": device.name,
             "device.homeId": device.homeId,
@@ -560,7 +548,7 @@ const mqttServices = {
           );
           const user = await User.findOne({ "home._id": device.homeId });
           let alert;
-          if (predValue > 50) {
+          if (predValue > 2.4) {
             alert = await AlertService.createAlert(
               user._id,
               `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,

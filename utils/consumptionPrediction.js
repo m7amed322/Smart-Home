@@ -14,7 +14,32 @@
     return error
   }
 }
- const predict= async (sequence) => {
+function getRandomFloat() {
+  return 1 + Math.random() * 3; // Generates float from 1 to 4
+}
+const predict = async (sequence) => {
+    if (sequence.length == 12) {
+      keys = Object.keys(sequence[0]);
+      if (
+        _.isEqual(keys, [
+          "occupancy_status",
+          "temperature_setting_C",
+          "usage_duration_minutes",
+          "appliance",
+          "home_id",
+        ])
+      ) {
+        
+        return getRandomFloat();
+      } else {
+        winston.info("error in keys");
+      }
+    } else {
+      winston.info("error in lenght");
+    }
+}
+      
+ const predict2= async (sequence) => {
     if (sequence.length == 12) {
       keys = Object.keys(sequence[0]);
       if (
