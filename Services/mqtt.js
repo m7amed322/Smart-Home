@@ -655,12 +655,12 @@ const mqttServices = {
         const devices = await Device.find(
           { homeId: home._id },
           {
-            seqs: -1,
-            preds: -1,
-            _id: -1,
-            homeId: -1,
-            energyConsumptionDate: -1,
-            usageDurationInMin: -1,
+            seqs: 1,
+            preds: 1,
+            _id: 1,
+            homeId: 1,
+            energyConsumptionDate: 1,
+            usageDurationInMin: 1,
           }
         );
         const monthlySummary = {
@@ -737,12 +737,12 @@ const mqttServices = {
         const devices = await Device.find(
           { homeId: home._id },
           {
-            seqs: -1,
-            preds: -1,
-            _id: -1,
-            homeId: -1,
-            energyConsumptionDate: -1,
-            usageDurationInMin: -1,
+            seqs: 1,
+            preds: 1,
+            _id: 1,
+            homeId: 1,
+            energyConsumptionDate: 1,
+            usageDurationInMin: 1,
           }
         );
         const weeklySummary = {
