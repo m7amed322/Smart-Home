@@ -12,6 +12,7 @@ const { User } = require("../models/user.js");
 const _ = require("lodash");
 const predict = require("../utils/consumptionPrediction.js");
 const { streamTemp } = require("./alert.js");
+const AlertService = require("../Services/alert.js")
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
   port: 8883,
@@ -551,6 +552,7 @@ const mqttServices = {
           const user = await User.findOne({ "home._id": device.homeId });
           let alert;
           if (predValue > 2.4) {
+            console.log(predValue);
             alert = await AlertService.createAlert(
               user._id,
               `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,
