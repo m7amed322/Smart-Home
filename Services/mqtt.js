@@ -654,7 +654,7 @@ const mqttServices = {
         predictions.forEach((pred) => {
           predictionMap.set(pred.device.id, pred.after_6hour || 0);
         });
-        const devices = await Device.find({ homeId: home._id });
+        const devices = await Device.find({ homeId: homeId });
         const monthlySummary = {
           generatedAt: currentDate,
           data: {
