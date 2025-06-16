@@ -410,6 +410,7 @@ const mqttServices = {
           usage_duration_minutes: seqData.durationInMin,
           device_id: device._id,
         });
+        await Home.updateOne({_id:homeId},{$set:{temp:seqData.temp}});
         const seqs = await Sequential.find({
           home_id: homeId,
           device_id: device._id,
