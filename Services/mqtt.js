@@ -11,6 +11,7 @@ const { wrapper } = require("../utils/helper");
 const { User } = require("../models/user.js");
 const _ = require("lodash");
 const predict = require("../utils/consumptionPrediction.js");
+const { streamTemp } = require("./alert.js");
 const mqttOptions = {
   host: "1ec717a52a884a89956c7ebbcc12e720.s1.eu.hivemq.cloud",
   port: 8883,
@@ -410,7 +411,7 @@ const mqttServices = {
           usage_duration_minutes: seqData.durationInMin,
           device_id: device._id,
         });
-        await Home.updateOne({_id:homeId},{$set:{temp:seqData.temp}});
+        await Home.updateOne({ _id: homeId }, { $set: { temp: seqData.temp } });
         const seqs = await Sequential.find({
           home_id: homeId,
           device_id: device._id,
@@ -497,7 +498,7 @@ const mqttServices = {
           await room.save();
           const user = await User.findOne({ "home._id": room.homeId });
           let alert;
-          if (predValue > 50) {
+          if (predValue > 2.4) {
             alert = await AlertService.createAlert(
               user._id,
               `from the device: ${room.led[indexOfled].name} of room : ${room.name} the predicted value after 6 hours: ${predValue} `,
@@ -776,6 +777,11 @@ const mqttServices = {
       }
     } catch (error) {
       throw new Error(`Error generating weekly data: ${error.message}`);
+    }
+  },
+  streamTemp(io=null) {
+    for (const homeId in TemperatureList) {
+      streamTemp(homeId, TemperatureList[homeId],io);
     }
   },
 };

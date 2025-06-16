@@ -7,8 +7,9 @@ module.exports = async function (io) {
   setInterval(async () => {
     try {
       await mqttServices.processSeq(io);
-        await mqttServices.storeData();
-        mqttServices.resetLists();
+      mqttServices.streamTemp(io);
+      await mqttServices.storeData();
+      mqttServices.resetLists();
     } catch (err) {
       winston.error("Error in scheduled tasks:", err);
     }

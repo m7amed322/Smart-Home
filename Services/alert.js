@@ -69,6 +69,16 @@ const AlertService = {
     }
     await Alert.updateOne({userId:userId,_id:alertId,read:false},{$set:{read:true}});
     return "this alerts is read"
-  })
+  }),
+  streamTemp:wrapper( (homeId, temp, io = null) => {
+    if (io) {
+      io.emit(`${homeId}`, {
+        id: alert._id,
+        temp,
+        createdAt: new Date(),
+        homeId: homeId,
+      });
+    }
+  }),
 };
 module.exports = AlertService;
