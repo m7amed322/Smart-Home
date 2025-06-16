@@ -73,7 +73,6 @@ const AlertService = {
   streamTemp:wrapper( (homeId, temp, io = null) => {
     if (io) {
       io.emit(`${homeId}`, {
-        id: alert._id,
         temp,
         createdAt: new Date(),
         homeId: homeId,

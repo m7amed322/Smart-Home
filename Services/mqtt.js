@@ -555,7 +555,7 @@ const mqttServices = {
             console.log(predValue);
             alert = await AlertService.createAlert(
               user._id,
-              `from the device: ${device.name} the predicted value after 6 hours: ${predValue} `,
+              `from the device: ${device.name} the predicted value after 6 hours: ${predValue.toFixed(2)} `,
               io
             );
           }
